@@ -3,12 +3,15 @@ require("express-async-errors");
 const morgan = require("morgan");
 const express = require("express");
 const booksRoutes = require("./src/books/routes");
-const borrowersRoutes = require("./src/borrowers/routes");
+const borrowersRoutes = require("./src/users/routes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger_output.json");
 
 const app = express();
 
 app.use(express.json());
 
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(express.static("public"));
 app.use(morgan("tiny"));
 
@@ -19,7 +22,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/books", booksRoutes);
-app.use("/api/v1/borrowers", borrowersRoutes);
+app.use("/api/v1/users", borrowersRoutes);
 
 app.use((err, req, res, next) => {
   console.log(err);
