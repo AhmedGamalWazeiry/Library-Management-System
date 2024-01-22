@@ -3,7 +3,7 @@
   "info": {
     "version": "1.0.0",
     "title": "REST API",
-    "description": "A simple REST API for managing books and borrowers."
+    "description": "A simple REST API for managing books and users."
   },
   "host": "localhost:3000",
   "basePath": "/",
@@ -216,10 +216,10 @@
         }
       }
     },
-    "/api/v1/borrowers/": {
+    "/api/v1/users/": {
       "get": {
-        "tags": ["Borrowers"],
-        "description": "Get all borrowers.",
+        "tags": ["Users"],
+        "description": "Get all users.",
         "responses": {
           "200": {
             "description": "OK"
@@ -227,8 +227,8 @@
         }
       },
       "post": {
-        "tags": ["Borrowers"],
-        "description": "Create a new borrower.",
+        "tags": ["Users"],
+        "description": "Create a new user.",
         "parameters": [
           {
             "name": "body",
@@ -259,10 +259,10 @@
         }
       }
     },
-    "/api/v1/borrowers/{id}": {
+    "/api/v1/users/{id}": {
       "get": {
-        "tags": ["Borrowers"],
-        "description": "Get a specific borrower by ID.",
+        "tags": ["Users"],
+        "description": "Get a specific user by ID.",
         "parameters": [
           {
             "name": "id",
@@ -281,8 +281,8 @@
         }
       },
       "put": {
-        "tags": ["Borrowers"],
-        "description": "Update a specific borrower by ID.",
+        "tags": ["Users"],
+        "description": "Update a specific user by ID.",
         "parameters": [
           {
             "name": "id",
@@ -319,8 +319,8 @@
         }
       },
       "patch": {
-        "tags": ["Borrowers"],
-        "description": "Partially update a specific borrower by ID.",
+        "tags": ["Users"],
+        "description": "Partially update a specific user by ID.",
         "parameters": [
           {
             "name": "id",
@@ -357,8 +357,160 @@
         }
       },
       "delete": {
-        "tags": ["Borrowers"],
-        "description": "Delete a specific borrower by ID.",
+        "tags": ["Users"],
+        "description": "Delete a specific user by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v1/authors/": {
+      "get": {
+        "tags": ["Authors"],
+        "description": "Get all authors",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Authors"],
+        "description": "Create a new author",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v1/authors/{id}": {
+      "get": {
+        "tags": ["Authors"],
+        "description": "Get a specific author by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Authors"],
+        "description": "Update a specific author by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Authors"],
+        "description": "Partially update a specific author by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "first_name": {
+                  "example": "any"
+                },
+                "last_name": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Authors"],
+        "description": "Delete a specific author by ID",
         "parameters": [
           {
             "name": "id",
@@ -377,15 +529,5 @@
         }
       }
     }
-  },
-  "tags": [
-    {
-      "name": "books",
-      "description": "Operations related to books"
-    },
-    {
-      "name": "Borrowers",
-      "description": "Operations related to Borrowers"
-    }
-  ]
+  }
 }

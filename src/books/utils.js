@@ -18,6 +18,12 @@ const isBookExist = async (bookId) => {
 
 // Validate request data based on the schema
 const validateRequest = async (schema, bookId, req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    return {
+      isError: true,
+      message: "You haven't entered any keys.", // Update the message
+    };
+  }
   if (bookId) {
     const currentBook = await db.oneOrNone(bookQueries.getBookById, [bookId]);
     if (!currentBook) {
@@ -36,7 +42,8 @@ const validateRequest = async (schema, bookId, req, res) => {
         message: error.details[0].message,
       };
     }
-    const { isbn, authorId } = req.body; // Use camelCase for variable names
+
+    const { isbn, author_id: authorId } = req.body; // Use camelCase for variable names
     if (isbn) {
       const book = await db.oneOrNone(bookQueries.isISBNExist, [isbn]);
       if (book && book.bookId !== bookId) {

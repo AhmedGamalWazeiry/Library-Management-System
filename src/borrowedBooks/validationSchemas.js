@@ -1,12 +1,9 @@
 const Joi = require("joi");
 
 const borrowedBookSchema = Joi.object({
-  BorrowedBooks_ID: Joi.number().integer().required(),
+  BorrowedBook_ID: Joi.number().integer(),
   Book_ID: Joi.number().integer().required(),
   User_ID: Joi.number().integer().required(),
-  Checkout_Date: Joi.date().default("now").required(),
-  Due_Date: Joi.date().required(),
-  Return_Date: Joi.date().allow(null),
 });
 const userPatchSchema = Joi.object({
   user_id: Joi.number().integer(),
@@ -16,6 +13,6 @@ const userPatchSchema = Joi.object({
 });
 
 module.exports = {
-  userSchema,
+  borrowedBookSchema,
   userPatchSchema,
 };

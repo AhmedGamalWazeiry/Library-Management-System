@@ -12,7 +12,13 @@ const addBook = async (req, res) => {
     res
   );
   if (isError) return res.status(400).json(message);
-  const { title, isbn, availableQuantity, shelfLocation, authorId } = req.body;
+  const {
+    title,
+    isbn,
+    available_quantity: availableQuantity,
+    shelf_location: shelfLocation,
+    author_id: authorId,
+  } = req.body;
 
   const book = await db.oneOrNone(bookQueries.addBook, [
     title,
@@ -35,7 +41,13 @@ const putBook = async (req, res) => {
     res
   );
   if (isError) return res.status(400).json(message);
-  const { title, isbn, availableQuantity, shelfLocation, authorId } = req.body;
+  const {
+    title,
+    isbn,
+    available_quantity: availableQuantity,
+    shelf_location: shelfLocation,
+    author_id: authorId,
+  } = req.body;
 
   const book = await db.oneOrNone(bookQueries.putBook, [
     title,

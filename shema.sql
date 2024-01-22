@@ -34,7 +34,7 @@ CREATE TABLE Users (
 
 -- Create the BorrowedBooks table
 CREATE TABLE BorrowedBooks (
-    BorrowedBooks_ID SERIAL PRIMARY KEY,
+    BorrowedBook_ID SERIAL PRIMARY KEY,
     Book_ID INT NOT NULL,
     User_ID INT NOT NULL,
     Checkout_Date DATE DEFAULT CURRENT_DATE NOT NULL,

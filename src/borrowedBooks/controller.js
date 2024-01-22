@@ -1,24 +1,27 @@
 const db = require("../../db");
 const userQueries = require("./queries"); // Update the import
-const { userSchema, userPatchSchema } = require("./validationSchemas"); // Update the import
+const { borrowedBookSchema, userPatchSchema } = require("./validationSchemas"); // Update the import
 const { isUserExist, validateRequest } = require("./utils"); // Update the import
 
 // Add a new user
-const addUser = async (req, res) => {
+const borrowBook = async (req, res) => {
   const { isError, message } = await validateRequest(
-    userSchema, // Update the schema
+    borrowedBookSchema, // Update the schema
     null,
     req,
     res
   );
   if (isError) return res.status(400).json(message);
-  const { first_name, last_name, email } = req.body;
+  const { book_id, user_id } = req.body;
 
-  const user = await db.oneOrNone(userQueries.addUser, [
+  let due_date = new Date();
+  due_date.setDate(due_date.getDate() + 7);
+
+  const user = await db.oneOrNone(userQueries.borrowBook, [
     // Update the query
-    first_name,
-    last_name,
-    email,
+    book_id,
+    user_id,
+    due_date,
   ]);
   res.status(200).json(user);
 };
@@ -103,10 +106,5 @@ const deleteUser = async (req, res) => {
 };
 
 module.exports = {
-  getUsers,
-  addUser,
-  getUserById,
-  putUser,
-  patchUser,
-  deleteUser,
+  borrowBook,
 };

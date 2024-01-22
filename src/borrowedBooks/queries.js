@@ -1,25 +1,25 @@
-const getUsers = "SELECT * FROM Users"; // Update the table name
+const getBorrowedBooks = "SELECT * FROM BorrowedBooks"; // Update the table name
 
-const addUser =
-  "INSERT INTO Users (first_name, last_name, email) VALUES ($1, $2, $3) RETURNING *"; // Update the table name and column names
+const addBorrowedBook =
+  "INSERT INTO BorrowedBooks (user_id, book_id, borrow_date) VALUES ($1, $2, $3) RETURNING *"; // Update the table name and column names
 
-const putUser =
-  "UPDATE Users SET first_name = $1, last_name = $2, email = $3 WHERE user_id = $4 RETURNING *"; // Update the table name, column names, and id column name
+const updateBorrowedBook =
+  "UPDATE BorrowedBooks SET user_id = $1, book_id = $2, borrow_date = $3 WHERE borrowed_book_id = $4 RETURNING *"; // Update the table name, column names, and id column name
 
-const patchUser = "UPDATE Users SET  WHERE user_id = $1 RETURNING *"; // Update the table name and id column name
+const deleteBorrowedBook =
+  "DELETE FROM BorrowedBooks WHERE borrowed_book_id = $1 RETURNING *"; // Update the table name and id column name
 
-const deleteUser = "DELETE FROM Users WHERE user_id = $1 RETURNING *"; // Update the table name and id column name
+const getBorrowedBookByBookId =
+  "SELECT * FROM BorrowedBooks WHERE book_id = $1"; // Update the table name
 
-const getUserByEmail = "SELECT * FROM Users WHERE email = $1"; // Update the table name
-
-const getUserById = "SELECT * FROM Users WHERE user_id = $1"; // Update the table name and id column name
+const getBorrowedBookById =
+  "SELECT * FROM BorrowedBooks WHERE borrowedbook_id = $1"; // Update the table name and id column name
 
 module.exports = {
-  getUsers,
-  getUserById,
-  addUser,
-  putUser,
-  patchUser,
-  deleteUser,
-  getUserByEmail,
+  getBorrowedBooks,
+  getBorrowedBookById,
+  addBorrowedBook,
+  updateBorrowedBook,
+  deleteBorrowedBook,
+  getBorrowedBookByBookId,
 };

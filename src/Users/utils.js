@@ -21,6 +21,12 @@ const isUserExist = async (userId) => {
 
 // Validate request data based on the schema
 const validateRequest = async (schema, userId, req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    return {
+      isError: true,
+      message: "You haven't entered any keys.", // Update the message
+    };
+  }
   // Update the function name
   if (userId) {
     const currentUser = await db.oneOrNone(

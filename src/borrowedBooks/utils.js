@@ -1,18 +1,18 @@
 const db = require("../../db");
-const userQueries = require("./queries"); // Update the import
+const borrowedBookQueries = require("./queries"); // Update the import to your borrowed book queries
 
-// Check if a user exists by ID
-const isUserExist = async (userId) => {
+// Check if a borrowed book exists by ID
+const isBorrowedBookExist = async (borrowedBookId) => {
   // Update the function name
-  if (userId) {
-    const currentUser = await db.oneOrNone(
-      userQueries.getUserById, // Update the query
-      [userId]
+  if (borrowedBookId) {
+    const currentBorrowedBook = await db.oneOrNone(
+      borrowedBookQueries.getBorrowedBookById, // Update the query
+      [borrowedBookId]
     );
-    if (!currentUser) {
+    if (!currentBorrowedBook) {
       return {
         isError: true,
-        message: "User not found with the specified ID.", // Update the message
+        message: "Borrowed book not found with the specified ID.", // Update the message
       };
     }
   }
@@ -20,17 +20,23 @@ const isUserExist = async (userId) => {
 };
 
 // Validate request data based on the schema
-const validateRequest = async (schema, userId, req, res) => {
+const validateRequest = async (schema, borrowedBookId, req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    return {
+      isError: true,
+      message: "You haven't entered any keys.", // Update the message
+    };
+  }
   // Update the function name
-  if (userId) {
-    const currentUser = await db.oneOrNone(
-      userQueries.getUserById, // Update the query
-      [userId]
+  if (borrowedBookId) {
+    const currentBorrowedBook = await db.oneOrNone(
+      borrowedBookQueries.getBorrowedBookById, // Update the query
+      [borrowedBookId]
     );
-    if (!currentUser) {
+    if (!currentBorrowedBook) {
       return {
         isError: true,
-        message: "User not found with the specified ID.", // Update the message
+        message: "Borrowed book not found with the specified ID.", // Update the message
       };
     }
   }
@@ -43,17 +49,17 @@ const validateRequest = async (schema, userId, req, res) => {
         message: error.details[0].message,
       };
     }
-    const { email } = req.body;
-    if (email) {
-      const user = await db.oneOrNone(userQueries.getUserByEmail, [
-        // Update the query
-        email,
-      ]);
-      if (user && user.user_id !== userId) {
-        // Update the condition
+    // Update the conditions related to borrowed book properties
+    const { bookId } = req.body;
+    if (bookId) {
+      const borrowedBook = await db.oneOrNone(
+        borrowedBookQueries.getBorrowedBookByBookId,
+        [bookId]
+      );
+      if (borrowedBook && borrowedBook.borrowedBookId !== borrowedBookId) {
         return {
           isError: true,
-          message: "This email already exists!",
+          message: "This book is already borrowed!",
         };
       }
     }
@@ -63,6 +69,6 @@ const validateRequest = async (schema, userId, req, res) => {
 };
 
 module.exports = {
-  isUserExist, // Update the export
+  isBorrowedBookExist, // Update the export
   validateRequest,
 };
