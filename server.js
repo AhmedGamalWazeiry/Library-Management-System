@@ -3,7 +3,7 @@ require("express-async-errors");
 const morgan = require("morgan");
 const express = require("express");
 const booksRoutes = require("./src/books/routes");
-// const usersRoutes = require("./src/users/routes");
+const usersRoutes = require("./src/users/routes");
 // const borrowedBooksRoutes = require("./src/borrowedBooks/routes");
 const authorsRoutes = require("./src/authors/routes");
 const swaggerUi = require("swagger-ui-express");
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/books", booksRoutes);
-// app.use("/api/v1/users", usersRoutes);
+app.use("/api/v1/users", usersRoutes);
 // app.use("/api/v1/borrowed-books", borrowedBooksRoutes);
 app.use("/api/v1/authors", authorsRoutes);
 

@@ -68,8 +68,8 @@ const patchAuthor = async (req, res) => {
   const { first_name, last_name } = req.body;
   const author = await Authors.findByPk(authorId);
   // Update the author's properties
-  if (first_name) author.first_name = first_name;
-  if (last_name) author.last_name = last_name;
+  if (first_name) author.First_Name = first_name;
+  if (last_name) author.Last_Name = last_name;
   // Save the changes to the database
   await author.save();
   res.status(200).json(author);

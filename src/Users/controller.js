@@ -2,6 +2,7 @@ const db = require("../../db");
 const userQueries = require("./queries"); // Update the import
 const { userSchema, userPatchSchema } = require("./validationSchemas"); // Update the import
 const { isUserExist, validateRequest } = require("./utils"); // Update the import
+const { Users } = require("./models");
 
 // Add a new user
 const addUser = async (req, res) => {
@@ -14,13 +15,12 @@ const addUser = async (req, res) => {
   if (isError) return res.status(400).json(message);
   const { first_name, last_name, email } = req.body;
 
-  const user = await db.oneOrNone(userQueries.addUser, [
-    // Update the query
-    first_name,
-    last_name,
-    email,
-  ]);
-  res.status(200).json(user);
+  const newUser = await Users.create({
+    First_Name: first_name,
+    Last_Name: last_name,
+    Email: email,
+  });
+  res.status(200).json(newUser);
 };
 
 // Update an existing user
@@ -36,14 +36,19 @@ const putUser = async (req, res) => {
   if (isError) return res.status(400).json(message);
   const { first_name, last_name, email } = req.body;
 
-  const user = await db.oneOrNone(userQueries.putUser, [
-    // Update the query
-    first_name,
-    last_name,
-    email,
-    userId,
-  ]);
-  res.status(200).json(user);
+  const [numUpdatedRows] = await Users.update(
+    {
+      First_Name: first_name,
+      Last_Name: last_name,
+      Email: email,
+    },
+    {
+      where: {
+        User_ID: userId,
+      },
+    }
+  );
+  res.status(200).json(numUpdatedRows);
 };
 
 // Partially update an existing user
@@ -57,20 +62,22 @@ const patchUser = async (req, res) => {
     res
   );
   if (isError) return res.status(400).json(message);
-  const keys = Object.keys(req.body);
-  const values = Object.values(req.body);
-  const setString = keys.map((key, i) => `${key} = $${i + 2}`).join(", ");
 
-  const user = await db.oneOrNone(
-    userQueries.patchUser.replace(/SET/, "SET " + setString), // Update the query
-    [userId, ...values]
-  );
+  const { first_name, last_name, email } = req.body;
+  const user = await Users.findByPk(userId);
+  // Update the author's properties
+  if (first_name) user.First_Name = first_name;
+  if (last_name) user.Last_Name = last_name;
+  if (email) user.Email = email;
+  // Save the changes to the database
+  await user.save();
+
   res.status(200).json(user);
 };
 
 // Get all users
 const getUsers = async (req, res) => {
-  const users = await db.any(userQueries.getUsers); // Update the query
+  const users = await Users.findAll({});
   res.status(200).json(users);
 };
 
@@ -78,28 +85,21 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   const userId = parseInt(req.params.id);
 
-  const { isError, message } = await isUserExist(userId); // Update the function
-  if (isError) return res.status(400).json(message);
-
-  const user = await db.oneOrNone(userQueries.getUserById, [
-    // Update the query
-    userId,
-  ]);
-  res.status(200).json(user);
+  const user = await Users.findByPk(userId);
+  if (user) res.status(200).json(user);
+  res.status(400).json("User not found with the specified ID.");
 };
 
 // Delete a user by ID
 const deleteUser = async (req, res) => {
   const userId = parseInt(req.params.id);
 
-  const { isError, message } = await isUserExist(userId); // Update the function
-  if (isError) return res.status(400).json(message);
-
-  const user = await db.oneOrNone(userQueries.deleteUser, [
-    // Update the query
-    userId,
-  ]);
-  res.status(200).json(user);
+  const user = await Users.findByPk(userId);
+  if (user) {
+    await user.destroy();
+    res.status(200).json(user);
+  }
+  res.status(400).json("User not found with the specified ID.");
 };
 
 module.exports = {

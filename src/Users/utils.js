@@ -1,5 +1,6 @@
 const db = require("../../db");
 const userQueries = require("./queries"); // Update the import
+const { Users } = require("./models");
 
 // Check if a user exists by ID
 const isUserExist = async (userId) => {
@@ -29,10 +30,7 @@ const validateRequest = async (schema, userId, req, res) => {
   }
   // Update the function name
   if (userId) {
-    const currentUser = await db.oneOrNone(
-      userQueries.getUserById, // Update the query
-      [userId]
-    );
+    const currentUser = await Users.findByPk(userId);
     if (!currentUser) {
       return {
         isError: true,
@@ -51,10 +49,12 @@ const validateRequest = async (schema, userId, req, res) => {
     }
     const { email } = req.body;
     if (email) {
-      const user = await db.oneOrNone(userQueries.getUserByEmail, [
-        // Update the query
-        email,
-      ]);
+      const user = await Users.findOne({
+        where: {
+          Email: email,
+        },
+      });
+
       if (user && user.user_id !== userId) {
         // Update the condition
         return {
