@@ -40,7 +40,7 @@ const patchAuthor = async (req, res) => {
   const { authorId, error } = getAndValidateIdParams(req, res);
   if (error) return;
 
-  const isError = await validateRequest(authorSchema, null, req, res);
+  const isError = await validateRequest(authorPatchSchema, null, req, res);
   if (isError) return;
 
   const { first_name, last_name } = req.body;
