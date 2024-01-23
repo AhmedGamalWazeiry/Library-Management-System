@@ -1,20 +1,6 @@
-const db = require("../../db");
 const bookQueries = require("./queries");
-const authorQueries = require("../authors/queries");
-
-// Check if a book exists by ID
-const isBookExist = async (bookId) => {
-  if (bookId) {
-    const currentBook = await db.oneOrNone(bookQueries.getBookById, [bookId]);
-    if (!currentBook) {
-      return {
-        isError: true,
-        message: "Book not found with the specified ID.",
-      };
-    }
-  }
-  return { isError: false, message: "none" };
-};
+const { Books } = require("./models");
+const { Authors } = require("../authors/models");
 
 // Validate request data based on the schema
 const validateRequest = async (schema, bookId, req, res) => {
@@ -25,7 +11,8 @@ const validateRequest = async (schema, bookId, req, res) => {
     };
   }
   if (bookId) {
-    const currentBook = await db.oneOrNone(bookQueries.getBookById, [bookId]);
+    const currentBook = await Books.findByPk(bookId);
+
     if (!currentBook) {
       return {
         isError: true,
@@ -45,15 +32,18 @@ const validateRequest = async (schema, bookId, req, res) => {
 
     const { isbn, author_id: authorId } = req.body; // Use camelCase for variable names
     if (isbn) {
-      const book = await db.oneOrNone(bookQueries.isISBNExist, [isbn]);
-      if (book && book.bookId !== bookId) {
+      const book = await Books.findOne({
+        where: {
+          ISBN: isbn,
+        },
+      });
+
+      if (book && book.book_id !== bookId) {
         return { isError: true, message: "This ISBN already exists!" };
       }
     }
     if (authorId) {
-      const author = await db.oneOrNone(authorQueries.getAuthorById, [
-        authorId,
-      ]);
+      const author = await Authors.findByPk(authorId);
       if (!author) {
         return {
           isError: true,
@@ -66,6 +56,5 @@ const validateRequest = async (schema, bookId, req, res) => {
 };
 
 module.exports = {
-  isBookExist,
   validateRequest,
 };

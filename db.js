@@ -1,5 +1,22 @@
-const pgp = require("pg-promise")();
-const connectionString = "postgres://postgres:123456@localhost:5432/library_db";
-const db = pgp(connectionString);
+const { Sequelize } = require("sequelize");
 
-module.exports = db;
+// Create a Sequelize instance and connect to the database
+const sequelize = new Sequelize("library_db", "postgres", "123456", {
+  host: "localhost",
+  port: 5432,
+  dialect: "postgres",
+});
+
+// Test the connection
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log("Connection has been established successfully.");
+  })
+  .catch((err) => {
+    console.error("Unable to connect to the database:", err);
+  });
+
+// Define your models and their associations here, e.g., User model
+
+module.exports = { sequelize };

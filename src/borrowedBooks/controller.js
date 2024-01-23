@@ -1,7 +1,16 @@
 const db = require("../../db");
-const userQueries = require("./queries"); // Update the import
-const { borrowedBookSchema, userPatchSchema } = require("./validationSchemas"); // Update the import
-const { isUserExist, validateRequest } = require("./utils"); // Update the import
+const borrowedBooksQueries = require("./queries"); // Update the import
+const bookQueries = require("../books/queries");
+const {
+  borrowedBookSchema,
+  userPatchSchema,
+  getborrowedBookSchema,
+} = require("./validationSchemas"); // Update the import
+const {
+  isCopyBookExistAndAvaliable,
+  validateRequest,
+  CheckIfCanReturnBook,
+} = require("./utils"); // Update the import
 
 // Add a new user
 const borrowBook = async (req, res) => {
@@ -11,19 +20,98 @@ const borrowBook = async (req, res) => {
     req,
     res
   );
+
   if (isError) return res.status(400).json(message);
-  const { book_id, user_id } = req.body;
+
+  const { copy_id, user_id } = req.body;
+
+  const { isErrorOccur, messageError } = await isCopyBookExistAndAvaliable(
+    copy_id
+  );
+
+  if (isErrorOccur) return res.status(400).json(messageError);
 
   let due_date = new Date();
   due_date.setDate(due_date.getDate() + 7);
 
-  const user = await db.oneOrNone(userQueries.borrowBook, [
-    // Update the query
-    book_id,
-    user_id,
-    due_date,
-  ]);
-  res.status(200).json(user);
+  // Start a new transaction
+  db.tx(async (t) => {
+    bookCopy = await t.oneOrNone(bookQueries.UpdateBookCopyStatus, [
+      copy_id,
+      "not available",
+    ]);
+    user = await t.oneOrNone(borrowedBooksQueries.borrowBook, [
+      user_id,
+      copy_id,
+      due_date,
+    ]);
+
+    return { User: user, BookCopy: bookCopy };
+  })
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ error: "the borrow book opertaion failed" });
+    });
+};
+
+const returnBook = async (req, res) => {
+  const { isError, message } = await validateRequest(
+    borrowedBookSchema, // Update the schema
+    null,
+    req,
+    res
+  );
+
+  if (isError) return res.status(400).json(message);
+
+  const { copy_id, user_id } = req.body;
+
+  const { isErrorOccur, messageError } = await CheckIfCanReturnBook(copy_id);
+  if (isErrorOccur) return res.status(400).json(messageError);
+
+  const return_date = new Date();
+
+  db.tx(async (t) => {
+    bookCopy = await t.oneOrNone(bookQueries.UpdateBookCopyStatus, [
+      copy_id,
+      "available",
+    ]);
+    const user = await db.oneOrNone(
+      borrowedBooksQueries.UpdateBorrowedBookReturnDate,
+      [
+        // Update the query
+        return_date,
+        user_id,
+        copy_id,
+      ]
+    );
+
+    return { User: user, BookCopy: bookCopy };
+  })
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ error: "the return book opertaion failed" });
+    });
+};
+
+const borrowedBooks = async (req, res) => {
+  const { isError, message } = await validateRequest(
+    getborrowedBookSchema, // Update the schema
+    null,
+    req,
+    res
+  );
+  const { user_id } = req.body;
+
+  if (isError) return res.status(400).json(message);
+  const books = await db.any(borrowedBooksQueries.getBorrowedBooks, [user_id]); // Update the query
+  res.status(200).json(books);
 };
 
 // Update an existing user
@@ -91,20 +179,8 @@ const getUserById = async (req, res) => {
   res.status(200).json(user);
 };
 
-// Delete a user by ID
-const deleteUser = async (req, res) => {
-  const userId = parseInt(req.params.id);
-
-  const { isError, message } = await isUserExist(userId); // Update the function
-  if (isError) return res.status(400).json(message);
-
-  const user = await db.oneOrNone(userQueries.deleteUser, [
-    // Update the query
-    userId,
-  ]);
-  res.status(200).json(user);
-};
-
 module.exports = {
   borrowBook,
+  returnBook,
+  borrowedBooks,
 };

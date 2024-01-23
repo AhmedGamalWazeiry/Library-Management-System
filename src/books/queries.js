@@ -1,5 +1,7 @@
 const getBooks =
   "SELECT book_id,title,isbn,available_quantity,shelf_location,CONCAT(a.first_name ,' ', a.last_name) as author FROM Books join Authors a using (author_id) ";
+const getBooksCopies =
+  "SELECT copy_id,book_id,title,isbn,available_quantity,shelf_location,CONCAT(a.first_name ,' ', a.last_name) as author,status FROM Books join Authors a using (author_id) join BookCopies using(book_id) ";
 const getBookById =
   "SELECT book_id,title,isbn,available_quantity,shelf_location,CONCAT(a.first_name ,' ', a.last_name) as author FROM Books  join authors a using (author_id) WHERE book_id = $1 ";
 const addBook =
@@ -17,6 +19,18 @@ const search =
 
 const isISBNExist = "Select * from books where isbn = $1";
 
+const addCopy = "INSERT INTO BookCopies (book_id) VALUES ($1) RETURNING *";
+
+const deleteCopy = "DELETE FROM BookCopies Where copy_id = $1 RETURNING *";
+
+const getCopy = "Select * FROM BookCopies Where copy_id = $1 ";
+
+const avalibleBookCopies =
+  "Select Count(*) from BookCopies where book_id = $1 and status = 'available'";
+
+const UpdateBookCopyStatus =
+  "UPDATE BookCopies SET status = $2 WHERE copy_id = $1 RETURNING *";
+
 module.exports = {
   getBooks,
   getBookById,
@@ -26,4 +40,10 @@ module.exports = {
   deleteBook,
   search,
   isISBNExist,
+  addCopy,
+  getBooksCopies,
+  avalibleBookCopies,
+  deleteCopy,
+  getCopy,
+  UpdateBookCopyStatus,
 };

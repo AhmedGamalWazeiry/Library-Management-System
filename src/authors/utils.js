@@ -1,24 +1,4 @@
-const db = require("../../db");
-const authorQueries = require("./queries"); // Update the import
-
-// Check if an author exists by ID
-const isAuthorExist = async (authorId) => {
-  // Update the function name
-  let currentAuthor = null;
-  if (authorId) {
-    const currentAuthor = await db.oneOrNone(
-      authorQueries.getAuthorById, // Update the query
-      [authorId]
-    );
-    if (!currentAuthor) {
-      return {
-        isError: true,
-        message: "Author not found with the specified ID.", // Update the message
-      };
-    }
-  }
-  return { isError: false, message: "none" };
-};
+const { Authors } = require("./models");
 
 // Validate request data based on the schema
 const validateRequest = async (schema, authorId, req, res) => {
@@ -31,10 +11,7 @@ const validateRequest = async (schema, authorId, req, res) => {
   let currentAuthor = null;
   // Update the function name
   if (authorId) {
-    currentAuthor = await db.oneOrNone(
-      authorQueries.getAuthorById, // Update the query
-      [authorId]
-    );
+    const currentAuthor = await Authors.findByPk(authorId);
     if (!currentAuthor) {
       return {
         isError: true,
@@ -55,11 +32,12 @@ const validateRequest = async (schema, authorId, req, res) => {
     if (!first_name) first_name = currentAuthor.first_name;
     if (!last_name) last_name = currentAuthor.last_name;
 
-    const author = await db.oneOrNone(authorQueries.isAuthorWithFullNameExist, [
-      // Update the query
-      first_name,
-      last_name,
-    ]);
+    const author = await Authors.findOne({
+      where: {
+        First_Name: first_name,
+        Last_Name: last_name,
+      },
+    });
     if (author && author.author_id !== authorId) {
       // Update the condition
       return {
@@ -74,6 +52,5 @@ const validateRequest = async (schema, authorId, req, res) => {
 };
 
 module.exports = {
-  isAuthorExist, // Update the export
   validateRequest,
 };

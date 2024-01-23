@@ -7,6 +7,9 @@ const bookSchema = Joi.object({
   shelf_location: Joi.string().max(255).required(),
   author_id: Joi.number().integer().required(),
 });
+const bookCopySchema = Joi.object({
+  book_id: Joi.number().integer().required(),
+});
 const bookPatchSchema = Joi.object({
   title: Joi.string().max(255),
   isbn: Joi.string().length(13),
@@ -18,4 +21,5 @@ const bookPatchSchema = Joi.object({
 module.exports = {
   bookSchema,
   bookPatchSchema,
+  bookCopySchema,
 };
