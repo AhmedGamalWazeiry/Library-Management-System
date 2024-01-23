@@ -23,7 +23,7 @@ const putUser = async (req, res) => {
   const { userId, error } = getAndValidateIdParams(req, res);
   if (error) return;
 
-  const isError = await validateRequest(userSchema, null, req, res);
+  const isError = await validateRequest(userSchema, userId, req, res);
   if (isError) return;
 
   const { first_name, last_name, email } = req.body;
@@ -43,7 +43,7 @@ const patchUser = async (req, res) => {
   const { userId, error } = getAndValidateIdParams(req, res);
   if (error) return;
 
-  const isError = await validateRequest(userPatchSchema, null, req, res);
+  const isError = await validateRequest(userPatchSchema, userId, req, res);
   if (isError) return;
 
   const { first_name, last_name, email } = req.body;

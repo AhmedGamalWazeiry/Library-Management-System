@@ -30,7 +30,7 @@ const putBook = async (req, res) => {
   const { bookId, error } = getAndValidateIdParams(req, res);
   if (error) return;
 
-  const isError = await validateRequest(bookSchema, null, req, res);
+  const isError = await validateRequest(bookSchema, bookId, req, res);
   if (isError) return;
 
   const { title, isbn, shelf_location, author_id } = req.body;
@@ -51,7 +51,7 @@ const patchBook = async (req, res) => {
   const { bookId, error } = getAndValidateIdParams(req, res);
   if (error) return;
 
-  const isError = await validateRequest(bookPatchSchema, null, req, res);
+  const isError = await validateRequest(bookPatchSchema, bookId, req, res);
   if (isError) return;
 
   const { title, isbn, shelf_location, author_id } = req.body;
