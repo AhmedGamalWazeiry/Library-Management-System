@@ -4,8 +4,8 @@ const controller = require("./controller");
 const router = Router();
 
 router.get("/", controller.borrowedBooks);
-router.post("/borrow-book", controller.borrowBook); // Update the route handler
-router.post("/return-book", controller.returnBook); // Update the route handler
+router.post("/borrow-book", controller.borrowBook);
+router.post("/return-book", controller.returnBook);
 router.get("/user-borrowed-books", controller.userBorrowedBooks);
 router.get("/overed-due", controller.overDueBorrowedBooks);
 router.get("/library-borrowing-insights", controller.libraryBorrowingInsights);

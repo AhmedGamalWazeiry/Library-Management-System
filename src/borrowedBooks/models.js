@@ -52,6 +52,4 @@ BorrowedBooks.init(
 BorrowedBooks.belongsTo(BookCopies, { foreignKey: "Copy_ID" });
 BorrowedBooks.belongsTo(Users, { foreignKey: "User_ID" });
 
-// sequelize.sync();
-
 module.exports = { BorrowedBooks };

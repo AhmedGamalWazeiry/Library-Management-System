@@ -1,31 +1,30 @@
-const { borrowedBookSchema, userPatchSchema } = require("./validationSchemas");
+const { borrowedBookSchema } = require("./validationSchemas");
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db");
+require("dotenv").config();
 const {
   isCopyBookExistAndAvaliable,
   validateRequest,
   CheckIfCanReturnBook,
   cleanAndExportBorrowingProcess,
+  getAndValidateIdParams,
 } = require("./utils");
 
+const baseURL = process.env.BASE_URL;
 const { BorrowedBooks } = require("./models");
 const { BookCopies, Books } = require("../books/models");
 const { Users } = require("../users/models");
 const { Authors } = require("../authors/models");
 
 const borrowBook = async (req, res) => {
-  const { isError, message } = await validateRequest(borrowedBookSchema, req);
-
-  if (isError) return res.status(400).json(message);
+  await validateRequest(borrowedBookSchema, req, res);
 
   const { copy_id, user_id } = req.body;
 
   let due_date = new Date();
-  due_date.setDate(due_date.getDate() + 7);
+  due_date.setDate(due_date.getDate() + 7); // let's make the due date 7 days from checkout
 
-  const { isErrorOccur, messageError, bookCopy } =
-    await isCopyBookExistAndAvaliable(copy_id);
-  if (isErrorOccur) return res.status(400).json(messageError);
+  const bookCopy = await isCopyBookExistAndAvaliable(copy_id, res);
 
   sequelize
     .transaction(async (t) => {
@@ -46,27 +45,21 @@ const borrowBook = async (req, res) => {
       res.status(200).json(data);
     })
     .catch((error) => {
-      console.log(error);
       res.status(500).json({ error: "The borrow book operation failed" });
     });
 };
 
 const returnBook = async (req, res) => {
-  const { isError, message } = await validateRequest(borrowedBookSchema, req);
-
-  if (isError) return res.status(400).json(message);
+  await validateRequest(borrowedBookSchema, req, res);
 
   const { copy_id, user_id } = req.body;
 
-  const { isErrorOccur, messageError, borrowedBook } =
-    await CheckIfCanReturnBook(copy_id, user_id);
-  if (isErrorOccur) return res.status(400).json(messageError);
+  const borrowedBook = await CheckIfCanReturnBook(copy_id, user_id);
 
   const bookCopy = await BookCopies.findByPk(copy_id);
 
-  if (!bookCopy) {
+  if (!bookCopy)
     res.status(400).json("Book Copy not found with the specified ID.");
-  }
 
   const return_date = new Date();
 
@@ -90,8 +83,7 @@ const returnBook = async (req, res) => {
 };
 
 const userBorrowedBooks = async (req, res) => {
-  const { isError, message } = await validateRequest(borrowedBookSchema, req);
-  if (isError) return res.status(400).json(message);
+  await validateRequest(borrowedBookSchema, req, res);
 
   const { user_id } = req.body;
 
@@ -101,8 +93,10 @@ const userBorrowedBooks = async (req, res) => {
       Return_Date: null,
     },
   });
+
   res.status(200).json(books);
 };
+
 const borrowedBooks = async (req, res) => {
   const books = await BorrowedBooks.findAll();
   res.status(200).json(books);
@@ -122,7 +116,7 @@ const overDueBorrowedBooks = async (req, res) => {
         {
           [Op.and]: [
             { Return_Date: { [Op.ne]: null } },
-            { Due_Date: { [Op.lt]: sequelize.col("Return_Date") } }, // Use Op.ne for "not equal to"
+            { Due_Date: { [Op.lt]: sequelize.col("Return_Date") } },
           ],
         },
       ],
@@ -131,21 +125,23 @@ const overDueBorrowedBooks = async (req, res) => {
   res.status(200).json(overDueBorrowedBooks);
 };
 
-// Update an existing user
+//I use this endpoint only for test the search endpoints like the below endpoints
 const putBorrowedBooks = async (req, res) => {
-  const bookId = parseInt(req.params.id);
+  const bookId = getAndValidateIdParams(req, res);
+
   const { return_date, due_date, checkout_date } = req.body;
 
   const book = await BorrowedBooks.findByPk(bookId);
-  if (book)
-    await book.update({
-      Return_Date: return_date,
-      Due_Date: due_date,
-      Checkout_Date: checkout_date,
-    });
 
-  console.log(book);
-  res.status(200).json(book);
+  if (book) {
+    if (return_date) book.Return_Date = return_date;
+    if (due_date) book.Due_Date = due_date;
+    if (checkout_date) book.Checkout_Date = checkout_date;
+    await book.save();
+    res.status(200).json(book);
+  }
+
+  res.status(400).json("Book not found with the specified ID.");
 };
 
 const libraryBorrowingInsights = async (req, res) => {
@@ -198,9 +194,11 @@ const libraryBorrowingInsights = async (req, res) => {
     ],
   });
 
-  const link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+  let link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
 
-  res.status(200).json(borrowedBooks);
+  link = baseURL + "/insights.csv";
+
+  res.status(200).json(link);
 };
 
 const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
@@ -264,9 +262,11 @@ const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
     ],
   });
 
-  const link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+  let link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
 
-  res.status(200).json(borrowedBooks);
+  link = baseURL + "/over-due-books.csv";
+
+  res.status(200).json(link);
 };
 
 const exportBorrowBooksProccessLastMonth = async (req, res) => {
@@ -325,9 +325,10 @@ const exportBorrowBooksProccessLastMonth = async (req, res) => {
     ],
   });
 
-  const link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+  let link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+  link = baseURL + "/borrow-books-proceses-last-month.csv";
 
-  res.status(200).json(borrowedBooks);
+  res.status(200).json(link);
 };
 module.exports = {
   borrowBook,
