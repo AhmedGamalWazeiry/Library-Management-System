@@ -11,9 +11,9 @@ const getAndValidateIdParams = (req, res) => {
 
 // Validate request data based on the schema
 const validateRequest = async (schema, authorId, req, res) => {
-  if (Object.keys(req.body).length === 0) {
+  if (Object.keys(req.body).length === 0)
     res.status(400).json("You haven't entered any keys.");
-  }
+
   let currentAuthor = null;
 
   if (authorId) {

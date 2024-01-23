@@ -1,53 +1,34 @@
 const db = require("../../db");
-const userQueries = require("./queries"); // Update the import
+const userQueries = require("./queries");
 const { Users } = require("./models");
 
-// Check if a user exists by ID
-const isUserExist = async (userId) => {
-  // Update the function name
-  if (userId) {
-    const currentUser = await db.oneOrNone(
-      userQueries.getUserById, // Update the query
-      [userId]
-    );
-    if (!currentUser) {
-      return {
-        isError: true,
-        message: "User not found with the specified ID.", // Update the message
-      };
-    }
-  }
-  return { isError: false, message: "none" };
+const getAndValidateIdParams = (req, res) => {
+  const userId = parseInt(req.params.id);
+  if (isNaN(userId) || !Number.isInteger(userId))
+    res
+      .status(400)
+      .json({ error: "Invalid user ID. Please provide a valid integer." });
+  return userId;
 };
 
 // Validate request data based on the schema
 const validateRequest = async (schema, userId, req, res) => {
-  if (Object.keys(req.body).length === 0) {
-    return {
-      isError: true,
-      message: "You haven't entered any keys.", // Update the message
-    };
-  }
-  // Update the function name
+  if (Object.keys(req.body).length === 0)
+    res.status(400).json("You haven't entered any keys.");
+
   if (userId) {
     const currentUser = await Users.findByPk(userId);
-    if (!currentUser) {
-      return {
-        isError: true,
-        message: "User not found with the specified ID.", // Update the message
-      };
-    }
+    if (!currentUser)
+      res.status(400).json("User not found with the specified ID.");
   }
 
   if (req.body) {
     const { error } = await schema.validate(req.body);
-    if (error) {
-      return {
-        isError: true,
-        message: error.details[0].message,
-      };
-    }
+
+    if (error) res.status(400).json(error.details[0].message);
+
     const { email } = req.body;
+
     if (email) {
       const user = await Users.findOne({
         where: {
@@ -55,20 +36,15 @@ const validateRequest = async (schema, userId, req, res) => {
         },
       });
 
-      if (user && user.user_id !== userId) {
-        // Update the condition
-        return {
-          isError: true,
-          message: "This email already exists!",
-        };
-      }
+      if (user && user.User_ID !== userId)
+        res.status(400).json("This email already exists!");
     }
   }
 
-  return { isError: false, message: "none" };
+  return;
 };
 
 module.exports = {
-  isUserExist, // Update the export
   validateRequest,
+  getAndValidateIdParams,
 };

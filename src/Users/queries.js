@@ -1,18 +1,18 @@
-const getUsers = "SELECT * FROM Users"; // Update the table name
+const getUsers = "SELECT * FROM Users";
 
 const addUser =
-  "INSERT INTO Users (first_name, last_name, email) VALUES ($1, $2, $3) RETURNING *"; // Update the table name and column names
+  "INSERT INTO Users (first_name, last_name, email) VALUES ($1, $2, $3) RETURNING *";
 
 const putUser =
-  "UPDATE Users SET first_name = $1, last_name = $2, email = $3 WHERE user_id = $4 RETURNING *"; // Update the table name, column names, and id column name
+  "UPDATE Users SET first_name = $1, last_name = $2, email = $3 WHERE user_id = $4 RETURNING *";
 
-const patchUser = "UPDATE Users SET  WHERE user_id = $1 RETURNING *"; // Update the table name and id column name
+const patchUser = "UPDATE Users SET  WHERE user_id = $1 RETURNING *";
 
-const deleteUser = "DELETE FROM Users WHERE user_id = $1 RETURNING *"; // Update the table name and id column name
+const deleteUser = "DELETE FROM Users WHERE user_id = $1 RETURNING *";
 
-const getUserByEmail = "SELECT * FROM Users WHERE email = $1"; // Update the table name
+const getUserByEmail = "SELECT * FROM Users WHERE email = $1";
 
-const getUserById = "SELECT * FROM Users WHERE user_id = $1"; // Update the table name and id column name
+const getUserById = "SELECT * FROM Users WHERE user_id = $1";
 
 module.exports = {
   getUsers,
