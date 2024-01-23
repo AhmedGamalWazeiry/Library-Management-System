@@ -1,94 +1,65 @@
+const { Op } = require("sequelize");
+const { sequelize } = require("../../db");
+const { validateRequest, getAndValidateIdParams } = require("./utils");
+const { Books, BookCopies } = require("./models");
+const { Authors } = require("../authors/models");
 const {
   bookSchema,
   bookPatchSchema,
   bookCopySchema,
 } = require("./validationSchemas");
-const { Op } = require("sequelize");
-const { validateRequest } = require("./utils");
-const { Books, BookCopies } = require("./models");
-const { Authors } = require("../authors/models");
 
 // Add a new book
 const addBook = async (req, res) => {
-  const { isError, message } = await validateRequest(
-    bookSchema,
-    null,
-    req,
-    res
-  );
-  if (isError) return res.status(400).json(message);
-  const {
-    title,
-    isbn,
-    available_quantity: availableQuantity,
-    shelf_location: shelfLocation,
-    author_id: authorId,
-  } = req.body;
+  await validateRequest(bookSchema, null, req, res);
+
+  const { title, isbn, shelf_location, author_id } = req.body;
 
   const book = await Books.create({
     Title: title,
     ISBN: isbn,
-    Available_Quantity: availableQuantity,
-    Shelf_Location: shelfLocation,
-    Author_ID: authorId,
+    Shelf_Location: shelf_location,
+    Author_ID: author_id,
   });
   res.status(200).json(book);
 };
+
 // Update an existing book
 const putBook = async (req, res) => {
-  const bookId = parseInt(req.params.id);
+  const bookId = getAndValidateIdParams(req, res);
 
-  const { isError, message } = await validateRequest(
-    bookSchema,
-    bookId,
-    req,
-    res
-  );
-  if (isError) return res.status(400).json(message);
-  const {
-    title,
-    isbn,
-    available_quantity: availableQuantity,
-    shelf_location: shelfLocation,
-    author_id: authorId,
-  } = req.body;
+  await validateRequest(bookSchema, bookId, req, res);
 
-  const updatedBook = await Books.update(
-    {
-      Title: title,
-      ISBN: isbn,
-      Available_Quantity: availableQuantity,
-      Shelf_Location: shelfLocation,
-      Author_ID: authorId,
-    },
-    {
-      where: {
-        Book_ID: bookId,
-      },
-    }
-  );
+  const { title, isbn, shelf_location, author_id } = req.body;
+
+  const updatedBook = await Books.findByPk(bookId);
+  updatedBook.Title = title;
+  updatedBook.ISBN = isbn;
+  updatedBook.Shelf_Location = shelf_location;
+  updatedBook.Author_ID = author_id;
+
+  await updatedBook.save();
+
   res.status(200).json(updatedBook);
 };
 
 // Partially update an existing book
 const patchBook = async (req, res) => {
-  const bookId = parseInt(req.params.id);
+  const bookId = getAndValidateIdParams(req, res);
 
-  const { isError, message } = await validateRequest(
-    bookPatchSchema,
-    bookId,
-    req,
-    res
-  );
-  if (isError) return res.status(400).json(message);
-  const { title, isbn, available_quantity, shelf_location, author_id } =
-    req.body;
+  await validateRequest(bookPatchSchema, bookId, req, res);
+
+  const { title, isbn, shelf_location, author_id } = req.body;
+
   const book = await Books.findByPk(bookId);
+
   if (title) book.Title = title;
   if (isbn) book.ISBN = isbn;
   if (shelf_location) book.Shelf_Location = shelf_location;
   if (author_id) book.Author_ID = author_id;
+
   await book.save();
+
   res.status(200).json(book);
 };
 
@@ -103,8 +74,11 @@ const getBooks = async (req, res) => {
       },
     ],
   });
+
   res.status(200).json(booksWithAuthors);
 };
+
+// Get all book Copies
 const getBooksCopies = async (req, res) => {
   const bookCopies = await BookCopies.findAll();
   res.status(200).json(bookCopies);
@@ -112,51 +86,50 @@ const getBooksCopies = async (req, res) => {
 
 // Get a book by ID
 const getBookById = async (req, res) => {
-  const bookId = parseInt(req.params.id);
+  const bookId = getAndValidateIdParams(req, res);
+
   const book = await Books.findByPk(bookId);
+
   if (book) res.status(200).json(book);
+
   res.status(400).json("Book not found with the specified ID.");
 };
 
 // Delete a book by ID
 const deleteBook = async (req, res) => {
-  const bookId = parseInt(req.params.id);
+  const bookId = getAndValidateIdParams(req, res);
 
   const book = await Books.findByPk(bookId);
+
   if (book) {
     await book.destroy();
-
     res.status(200).json(book);
   }
 
   res.status(400).json("book not found with the specified ID.");
 };
 
+// Delete a book Copy by ID
 const addBookCopy = async (req, res) => {
-  const { isError, message } = await validateRequest(
-    bookCopySchema,
-    null,
-    req,
-    res
-  );
+  await validateRequest(bookCopySchema, null, req, res);
 
-  if (isError) return res.status(400).json(message);
   const { book_id } = req.body;
 
   const bookCopy = await BookCopies.create({
     Book_ID: book_id,
-    Status: "available", // Assuming the default status is 'available'
+    Status: "available", // default status is 'available'
   });
+
   res.status(200).json(bookCopy);
 };
 
 const deleteBookCopy = async (req, res) => {
-  const bookCopyId = parseInt(req.params.id);
+  const bookCopyId = getAndValidateIdParams(req, res);
 
   const bookCopy = await BookCopies.findByPk(bookCopyId);
+
   if (bookCopy) {
     await bookCopy.destroy();
-
     res.status(200).json(bookCopy);
   }
 
@@ -167,18 +140,28 @@ const deleteBookCopy = async (req, res) => {
 const search = async (req, res) => {
   const { title, isbn, author } = req.query;
 
-  let whereClause = {};
+  let whereClause = {
+    [Op.or]: [],
+  };
 
   if (title) {
-    whereClause.Title = { [Op.iLike]: `%${title}%` };
+    whereClause[Op.or].push({ Title: { [Op.iLike]: `%${title}%` } });
   }
 
   if (isbn) {
-    whereClause.ISBN = { [Op.iLike]: `%${isbn}%` };
+    whereClause[Op.or].push({ ISBN: { [Op.iLike]: `%${isbn}%` } });
   }
 
   if (author) {
-    whereClause["$Author.First_Name$"] = { [Op.iLike]: `%${author}%` };
+    const authorSearchTerm = `%${author}%`;
+
+    whereClause[Op.or].push({
+      [Op.or]: [
+        sequelize.literal(
+          `CONCAT("Author"."First_Name", ' ', "Author"."Last_Name") ILIKE '${authorSearchTerm}'`
+        ),
+      ],
+    });
   }
 
   const books = await Books.findAll({
@@ -187,10 +170,11 @@ const search = async (req, res) => {
       {
         model: Authors,
         attributes: ["First_Name", "Last_Name"],
-        as: "Author", // assuming you've aliased your association
+        as: "Author",
       },
     ],
   });
+
   res.status(200).json(books);
 };
 

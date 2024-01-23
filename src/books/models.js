@@ -20,10 +20,6 @@ Books.init(
       unique: true,
       allowNull: false,
     },
-    Available_Quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     Shelf_Location: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -80,5 +76,5 @@ Books.belongsTo(Authors, { foreignKey: "Author_ID" });
 BookCopies.belongsTo(Books, { foreignKey: "Book_ID" });
 
 // Sync all defined models to the DB
-sequelize.sync();
+// sequelize.sync();
 module.exports = { Books, BookCopies };

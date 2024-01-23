@@ -1,36 +1,32 @@
-const bookQueries = require("./queries");
 const { Books } = require("./models");
 const { Authors } = require("../authors/models");
 
+const getAndValidateIdParams = (req, res) => {
+  const authorId = parseInt(req.params.id);
+  if (isNaN(authorId) || !Number.isInteger(authorId))
+    res
+      .status(400)
+      .json({ error: "Invalid author ID. Please provide a valid integer." });
+  return authorId;
+};
+
 // Validate request data based on the schema
 const validateRequest = async (schema, bookId, req, res) => {
-  if (Object.keys(req.body).length === 0) {
-    return {
-      isError: true,
-      message: "You haven't entered any keys.", // Update the message
-    };
-  }
+  if (Object.keys(req.body).length === 0)
+    res.status(400).json("You haven't entered any keys.");
+
   if (bookId) {
     const currentBook = await Books.findByPk(bookId);
 
-    if (!currentBook) {
-      return {
-        isError: true,
-        message: "Book not found with the specified ID.",
-      };
-    }
+    if (!currentBook)
+      res.status(400).json("Book not found with the specified ID.");
   }
 
   if (req.body) {
     const { error } = await schema.validate(req.body);
-    if (error) {
-      return {
-        isError: true,
-        message: error.details[0].message,
-      };
-    }
+    if (error) res.status(400).json(error.details[0].message);
 
-    const { isbn, author_id: authorId } = req.body; // Use camelCase for variable names
+    const { isbn, author_id } = req.body;
     if (isbn) {
       const book = await Books.findOne({
         where: {
@@ -38,23 +34,20 @@ const validateRequest = async (schema, bookId, req, res) => {
         },
       });
 
-      if (book && book.book_id !== bookId) {
-        return { isError: true, message: "This ISBN already exists!" };
-      }
+      if (book && book.Book_ID !== bookId)
+        res.status(400).json("This ISBN already exists!");
     }
-    if (authorId) {
-      const author = await Authors.findByPk(authorId);
-      if (!author) {
-        return {
-          isError: true,
-          message: "The author with this ID does not exist.",
-        };
-      }
+
+    if (author_id) {
+      const author = await Authors.findByPk(author_id);
+      if (!author)
+        res.status(400).json("The author with this ID does not exist.");
     }
   }
-  return { isError: false, message: "none" };
+  return;
 };
 
 module.exports = {
   validateRequest,
+  getAndValidateIdParams,
 };

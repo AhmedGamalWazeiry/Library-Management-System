@@ -37,6 +37,6 @@ Users.init(
   }
 );
 
-sequelize.sync().then(() => console.log("Users table has been synced"));
+// sequelize.sync().then(() => console.log("Users table has been synced"));
 
 module.exports = { Users };

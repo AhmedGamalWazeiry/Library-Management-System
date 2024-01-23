@@ -18,5 +18,5 @@ sequelize
   });
 
 // Define your models and their associations here, e.g., User model
-
+sequelize.sync().then(() => console.log("Database & tables created!"));
 module.exports = { sequelize };

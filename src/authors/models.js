@@ -30,5 +30,5 @@ Authors.init(
     ],
   }
 );
-sequelize.sync().then(() => console.log("Database & tables created!"));
+
 module.exports = { Authors };
