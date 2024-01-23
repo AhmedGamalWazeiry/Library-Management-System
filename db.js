@@ -1,8 +1,8 @@
 const { Sequelize } = require("sequelize");
 
 // Create a Sequelize instance and connect to the database
-const sequelize = new Sequelize("library_db", "postgres", "123456", {
-  host: "localhost",
+const sequelize = new Sequelize("library_db", "postgres", "password", {
+  host: "db",
   port: 5432,
   dialect: "postgres",
 });

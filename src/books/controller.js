@@ -115,12 +115,17 @@ const addBookCopy = async (req, res) => {
 
   const { book_id } = req.body;
 
-  const bookCopy = await BookCopies.create({
-    Book_ID: book_id,
-    Status: "available", // default status is 'available'
-  });
+  const book = await Books.findByPk(book_id);
+  if (book) {
+    const bookCopy = await BookCopies.create({
+      Book_ID: book_id,
+      Status: "available", // default status is 'available'
+    });
 
-  res.status(200).json(bookCopy);
+    res.status(200).json(bookCopy);
+  }
+
+  res.status(400).json("book not found with the specified ID.");
 };
 
 const deleteBookCopy = async (req, res) => {

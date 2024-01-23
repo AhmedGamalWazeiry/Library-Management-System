@@ -145,7 +145,7 @@ const putBorrowedBooks = async (req, res) => {
 };
 
 const libraryBorrowingInsights = async (req, res) => {
-  filePath = "public/insights.csv";
+  filePath = "/usr/src/app/public/insights.csv";
 
   const { start_date, end_date } = req.query;
 
@@ -202,7 +202,7 @@ const libraryBorrowingInsights = async (req, res) => {
 };
 
 const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
-  filePath = "public/over-due-books.csv";
+  filePath = "/usr/src/app/public/over-due-books.csv";
 
   const date = new Date();
   const firstDayOfLastMonth = new Date(
@@ -270,7 +270,7 @@ const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
 };
 
 const exportBorrowBooksProccessLastMonth = async (req, res) => {
-  filePath = "public/borrow-books-proceses-last-month.csv";
+  filePath = "/usr/src/app/public/borrow-books-proceses-last-month.csv";
 
   const date = new Date();
   const firstDayOfLastMonth = new Date(

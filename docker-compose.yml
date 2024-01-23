@@ -1,0 +1,27 @@
+version: "3"
+services:
+  app:
+    image: node:14
+    volumes:
+      - ./:/usr/src/app
+      - ./public:/usr/src/app/public
+    working_dir: /usr/src/app
+    command: bash -c "npm install && npm run start"
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/library_db
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=library_db
+
+volumes:
+  postgres_data:
