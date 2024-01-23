@@ -1,6 +1,7 @@
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const fs = require("fs").promises;
 const { BookCopies } = require("../books/models");
+const { Users } = require("../users/models");
 const { BorrowedBooks } = require("./models");
 
 const getAndValidateIdParams = (req, res) => {
@@ -109,6 +110,15 @@ const isCopyBookExistAndAvaliable = async (copy_Id, res) => {
 
   return currentCopyBook;
 };
+
+const isUserExist = async (user_id, res) => {
+  const currentCopyBook = await Users.findByPk(user_id);
+
+  if (!currentCopyBook)
+    res.status(400).json("The user not found with the specified ID.");
+
+  return;
+};
 // Check if a borrowed book exists by ID
 const CheckIfCanReturnBook = async (copy_id, user_id, res) => {
   const currentBorrowedBook = await BorrowedBooks.findOne({
@@ -148,4 +158,5 @@ module.exports = {
   CheckIfCanReturnBook,
   cleanAndExportBorrowingProcess,
   getAndValidateIdParams,
+  isUserExist,
 };

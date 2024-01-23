@@ -8,6 +8,7 @@ const {
   CheckIfCanReturnBook,
   cleanAndExportBorrowingProcess,
   getAndValidateIdParams,
+  isUserExist,
 } = require("./utils");
 
 const baseURL = process.env.BASE_URL;
@@ -25,6 +26,7 @@ const borrowBook = async (req, res) => {
   due_date.setDate(due_date.getDate() + 7); // let's make the due date 7 days from checkout
 
   const bookCopy = await isCopyBookExistAndAvaliable(copy_id, res);
+  await isUserExist(user_id, res);
 
   sequelize
     .transaction(async (t) => {
@@ -54,13 +56,13 @@ const returnBook = async (req, res) => {
 
   const { copy_id, user_id } = req.body;
 
-  const borrowedBook = await CheckIfCanReturnBook(copy_id, user_id);
+  await isUserExist(user_id, res);
 
   const bookCopy = await BookCopies.findByPk(copy_id);
-
   if (!bookCopy)
     res.status(400).json("Book Copy not found with the specified ID.");
 
+  const borrowedBook = await CheckIfCanReturnBook(copy_id, user_id);
   const return_date = new Date();
 
   sequelize
@@ -86,6 +88,8 @@ const userBorrowedBooks = async (req, res) => {
   await validateRequest(borrowedBookSchema, req, res);
 
   const { user_id } = req.body;
+
+  await isUserExist(user_id, res);
 
   const books = await BorrowedBooks.findAll({
     where: {
