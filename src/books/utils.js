@@ -19,6 +19,7 @@ const validateRequest = async (schema, bookId, req, res) => {
   if (Object.keys(req.body).length === 0) {
     isError = true;
     res.status(400).json("You haven't entered any keys.");
+    return isError;
   }
 
   if (bookId) {
@@ -27,6 +28,7 @@ const validateRequest = async (schema, bookId, req, res) => {
     if (!currentBook) {
       isError = true;
       res.status(400).json("Book not found with the specified ID.");
+      return isError;
     }
   }
 
@@ -35,6 +37,7 @@ const validateRequest = async (schema, bookId, req, res) => {
     if (error) {
       isError = true;
       res.status(400).json(error.details[0].message);
+      return isError;
     }
 
     const { isbn, author_id } = req.body;
@@ -48,6 +51,7 @@ const validateRequest = async (schema, bookId, req, res) => {
       if (book && book.Book_ID !== bookId) {
         isError = true;
         res.status(400).json("This ISBN already exists!");
+        return isError;
       }
     }
 
@@ -56,6 +60,7 @@ const validateRequest = async (schema, bookId, req, res) => {
       if (!author) {
         isError = true;
         res.status(400).json("The author with this ID does not exist.");
+        return isError;
       }
     }
   }

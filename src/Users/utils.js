@@ -1,5 +1,3 @@
-const db = require("../../db");
-const userQueries = require("./queries");
 const { Users } = require("./models");
 
 const getAndValidateIdParams = (req, res) => {
@@ -20,6 +18,7 @@ const validateRequest = async (schema, userId, req, res) => {
   if (Object.keys(req.body).length === 0) {
     isError = true;
     res.status(400).json("You haven't entered any keys.");
+    return isError;
   }
 
   if (userId) {
@@ -27,6 +26,7 @@ const validateRequest = async (schema, userId, req, res) => {
     if (!currentUser) {
       isError = true;
       res.status(400).json("User not found with the specified ID.");
+      return isError;
     }
   }
 
@@ -36,6 +36,7 @@ const validateRequest = async (schema, userId, req, res) => {
     if (error) {
       isError = true;
       res.status(400).json(error.details[0].message);
+      return isError;
     }
 
     const { email } = req.body;
@@ -50,6 +51,7 @@ const validateRequest = async (schema, userId, req, res) => {
       if (user && user.User_ID !== userId) {
         isError = true;
         res.status(400).json("This email already exists!");
+        return isError;
       }
     }
   }

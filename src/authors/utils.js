@@ -18,6 +18,7 @@ const validateRequest = async (schema, authorId, req, res) => {
   if (Object.keys(req.body).length === 0) {
     isError = true;
     res.status(400).json("You haven't entered any keys.");
+    return isError;
   }
 
   let currentAuthor = null;
@@ -27,6 +28,7 @@ const validateRequest = async (schema, authorId, req, res) => {
     if (!currentAuthor) {
       isError = true;
       res.status(400).json("Author not found with the specified ID.");
+      return isError;
     }
   }
 
@@ -35,6 +37,7 @@ const validateRequest = async (schema, authorId, req, res) => {
     if (error) {
       isError = true;
       res.status(400).json(error.details[0].message);
+      return isError;
     }
 
     let { first_name, last_name } = req.body;
@@ -54,6 +57,7 @@ const validateRequest = async (schema, authorId, req, res) => {
         .json(
           "The entered first name or last name is already in use. Please choose a unique name."
         );
+      return isError;
     }
   }
 
