@@ -45,7 +45,7 @@ app.use((err, req, res, next) => {
   if (err.detail) {
     res.status(500).send(`Error:${err.detail} `);
   } else {
-    res.status(500).send(`Something went Wrong!`);
+    res.status(500).send(`Something went Wrong11111111111111111111111111!`);
   }
 });
 app.listen(port, () => console.log(`app listening on port ${port}`));

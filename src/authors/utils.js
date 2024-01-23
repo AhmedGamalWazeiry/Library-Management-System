@@ -1,36 +1,34 @@
 const { Authors } = require("./models");
 
+const getAndValidateIdParams = (req, res) => {
+  const authorId = parseInt(req.params.id);
+  if (isNaN(authorId) || !Number.isInteger(authorId))
+    res
+      .status(400)
+      .json({ error: "Invalid author ID. Please provide a valid integer." });
+  return authorId;
+};
+
 // Validate request data based on the schema
 const validateRequest = async (schema, authorId, req, res) => {
   if (Object.keys(req.body).length === 0) {
-    return {
-      isError: true,
-      message: "You haven't entered any keys.", // Update the message
-    };
+    res.status(400).json("You haven't entered any keys.");
   }
   let currentAuthor = null;
-  // Update the function name
+
   if (authorId) {
-    const currentAuthor = await Authors.findByPk(authorId);
-    if (!currentAuthor) {
-      return {
-        isError: true,
-        message: "Author not found with the specified ID.", // Update the message
-      };
-    }
+    currentAuthor = await Authors.findByPk(authorId);
+    if (!currentAuthor)
+      res.status(400).json("Author not found with the specified ID.");
   }
 
   if (req.body) {
     const { error } = await schema.validate(req.body);
-    if (error) {
-      return {
-        isError: true,
-        message: error.details[0].message,
-      };
-    }
+    if (error) res.status(400).json(error.details[0].message);
+
     let { first_name, last_name } = req.body;
-    if (!first_name) first_name = currentAuthor.first_name;
-    if (!last_name) last_name = currentAuthor.last_name;
+    if (!first_name) first_name = currentAuthor.First_Name;
+    if (!last_name) last_name = currentAuthor.Last_Name;
 
     const author = await Authors.findOne({
       where: {
@@ -38,19 +36,18 @@ const validateRequest = async (schema, authorId, req, res) => {
         Last_Name: last_name,
       },
     });
-    if (author && author.author_id !== authorId) {
-      // Update the condition
-      return {
-        isError: true,
-        message:
-          "The entered first name or last name is already in use. Please choose a unique name.",
-      };
-    }
+    if (author && author.Author_ID !== authorId)
+      res
+        .status(400)
+        .json(
+          "The entered first name or last name is already in use. Please choose a unique name."
+        );
   }
 
-  return { isError: false, message: "none" };
+  return;
 };
 
 module.exports = {
   validateRequest,
+  getAndValidateIdParams,
 };
