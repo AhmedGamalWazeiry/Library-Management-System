@@ -7,9 +7,9 @@ To run the project, follow these steps:
 1. Open a terminal in the project directory.
 
 2. Run the following command to build and start the project using Docker:
-    ```bash
-    docker-compose up --build
-    ```
+   ```bash
+   docker-compose up --build
+   ```
 
 ## API Documentation
 
@@ -18,5 +18,3 @@ Once the project is running, you can access the API documentation at [http://loc
 ## Database Design
 
 The database design can be found in the `Schema-design` folder. Explore the schema files to understand the structure and relationships within the database.
-
-Feel free to reach out if you have any questions or encounter issues.
