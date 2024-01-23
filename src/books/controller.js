@@ -22,7 +22,7 @@ const addBook = async (req, res) => {
     Shelf_Location: shelf_location,
     Author_ID: author_id,
   });
-  res.status(200).json(book);
+  return res.status(200).json(book);
 };
 
 // Update an existing book
@@ -43,7 +43,7 @@ const putBook = async (req, res) => {
 
   await updatedBook.save();
 
-  res.status(200).json(updatedBook);
+  return res.status(200).json(updatedBook);
 };
 
 // Partially update an existing book
@@ -65,7 +65,7 @@ const patchBook = async (req, res) => {
 
   await book.save();
 
-  res.status(200).json(book);
+  return res.status(200).json(book);
 };
 
 // Get all books
@@ -80,13 +80,13 @@ const getBooks = async (req, res) => {
     ],
   });
 
-  res.status(200).json(booksWithAuthors);
+  return res.status(200).json(booksWithAuthors);
 };
 
 // Get all book Copies
 const getBooksCopies = async (req, res) => {
   const bookCopies = await BookCopies.findAll();
-  res.status(200).json(bookCopies);
+  return res.status(200).json(bookCopies);
 };
 
 // Get a book by ID
@@ -98,7 +98,7 @@ const getBookById = async (req, res) => {
 
   if (book) res.status(200).json(book);
 
-  res.status(400).json("Book not found with the specified ID.");
+  return res.status(400).json("Book not found with the specified ID.");
 };
 
 // Delete a book by ID
@@ -110,10 +110,10 @@ const deleteBook = async (req, res) => {
 
   if (book) {
     await book.destroy();
-    res.status(200).json(book);
+    return res.status(200).json(book);
   }
 
-  res.status(400).json("book not found with the specified ID.");
+  return res.status(400).json("book not found with the specified ID.");
 };
 
 // Delete a book Copy by ID
@@ -130,10 +130,10 @@ const addBookCopy = async (req, res) => {
       Status: "available", // default status is 'available'
     });
 
-    res.status(200).json(bookCopy);
+    return res.status(200).json(bookCopy);
   }
 
-  res.status(400).json("book not found with the specified ID.");
+  return res.status(400).json("book not found with the specified ID.");
 };
 
 const deleteBookCopy = async (req, res) => {
@@ -144,10 +144,10 @@ const deleteBookCopy = async (req, res) => {
 
   if (bookCopy) {
     await bookCopy.destroy();
-    res.status(200).json(bookCopy);
+    return res.status(200).json(bookCopy);
   }
 
-  res.status(400).json("book Copy not found with the specified ID.");
+  return res.status(400).json("book Copy not found with the specified ID.");
 };
 
 // Search for books based on title, ISBN, and author
@@ -189,7 +189,7 @@ const search = async (req, res) => {
     ],
   });
 
-  res.status(200).json(books);
+  return res.status(200).json(books);
 };
 
 module.exports = {

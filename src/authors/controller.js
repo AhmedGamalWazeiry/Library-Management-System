@@ -14,7 +14,7 @@ const addAuthor = async (req, res) => {
     Last_Name: last_name,
   });
 
-  res.status(201).json(author);
+  return res.status(201).json(author);
 };
 
 // Update an existing author
@@ -33,7 +33,7 @@ const putAuthor = async (req, res) => {
 
   await author.save();
 
-  res.status(200).json(author);
+  return res.status(200).json(author);
 };
 
 const patchAuthor = async (req, res) => {
@@ -52,13 +52,13 @@ const patchAuthor = async (req, res) => {
 
   await author.save();
 
-  res.status(200).json(author);
+  return res.status(200).json(author);
 };
 
 // Get all authors
 const getAuthors = async (req, res) => {
   const authors = await Authors.findAll();
-  res.status(200).json(authors);
+  return res.status(200).json(authors);
 };
 
 // Get an author by ID
@@ -68,9 +68,9 @@ const getAuthorById = async (req, res) => {
 
   const author = await Authors.findByPk(authorId);
 
-  if (author) res.status(200).json(author);
+  if (author) return res.status(200).json(author);
 
-  res.status(400).json("Author not found with the specified ID.");
+  return res.status(400).json("Author not found with the specified ID.");
 };
 
 // Delete an author by ID
@@ -81,10 +81,10 @@ const deleteAuthor = async (req, res) => {
   const author = await Authors.findByPk(authorId);
   if (author) {
     await author.destroy();
-    res.status(200).json(author);
+    return res.status(200).json(author);
   }
 
-  res.status(400).json("Author not found with the specified ID.");
+  return res.status(400).json("Author not found with the specified ID.");
 };
 
 module.exports = {

@@ -72,7 +72,7 @@ const returnBook = async (req, res) => {
 
   const bookCopy = await BookCopies.findByPk(copy_id);
   if (!bookCopy)
-    res.status(400).json("Book Copy not found with the specified ID.");
+    return res.status(400).json("Book Copy not found with the specified ID.");
 
   const { borrowedBook, checkIsError } = await CheckIfCanReturnBook(
     copy_id,
@@ -116,12 +116,12 @@ const userBorrowedBooks = async (req, res) => {
     },
   });
 
-  res.status(200).json(books);
+  return res.status(200).json(books);
 };
 
 const borrowedBooks = async (req, res) => {
   const books = await BorrowedBooks.findAll();
-  res.status(200).json(books);
+  return res.status(200).json(books);
 };
 
 const overDueBorrowedBooks = async (req, res) => {
@@ -144,7 +144,7 @@ const overDueBorrowedBooks = async (req, res) => {
       ],
     },
   });
-  res.status(200).json(overDueBorrowedBooks);
+  return res.status(200).json(overDueBorrowedBooks);
 };
 
 //I use this endpoint only for test the search endpoints like the below endpoints
@@ -161,10 +161,10 @@ const putBorrowedBooks = async (req, res) => {
     if (due_date) book.Due_Date = due_date;
     if (checkout_date) book.Checkout_Date = checkout_date;
     await book.save();
-    res.status(200).json(book);
+    return res.status(200).json(book);
   }
 
-  res.status(400).json("Book not found with the specified ID.");
+  return res.status(400).json("Book not found with the specified ID.");
 };
 
 const libraryBorrowingInsights = async (req, res) => {
@@ -221,7 +221,7 @@ const libraryBorrowingInsights = async (req, res) => {
 
   link = baseURL + "/insights.csv";
 
-  res.status(200).json(link);
+  return res.status(200).json(link);
 };
 
 const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
@@ -289,7 +289,7 @@ const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
 
   link = baseURL + "/over-due-books.csv";
 
-  res.status(200).json(link);
+  return res.status(200).json(link);
 };
 
 const exportBorrowBooksProccessLastMonth = async (req, res) => {
@@ -351,7 +351,7 @@ const exportBorrowBooksProccessLastMonth = async (req, res) => {
   let link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
   link = baseURL + "/borrow-books-proceses-last-month.csv";
 
-  res.status(200).json(link);
+  return res.status(200).json(link);
 };
 module.exports = {
   borrowBook,
