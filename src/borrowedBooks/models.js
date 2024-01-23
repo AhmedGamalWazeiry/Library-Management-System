@@ -46,6 +46,11 @@ BorrowedBooks.init(
   {
     sequelize,
     modelName: "BorrowedBooks",
+    indexes: [
+      { fields: ["Checkout_Date"] },
+      { fields: ["Return_Date"] },
+      { fields: ["Due_Date"] },
+    ],
   }
 );
 

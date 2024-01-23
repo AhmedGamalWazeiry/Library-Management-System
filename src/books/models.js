@@ -37,6 +37,7 @@ Books.init(
   {
     sequelize,
     modelName: "Books",
+    indexes: [{ fields: ["Title"] }, { fields: ["ISBN"] }],
   }
 );
 
