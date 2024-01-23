@@ -1,140 +1,141 @@
-const db = require("../../db");
-const borrowedBooksQueries = require("./queries"); // Update the import
-const bookQueries = require("../books/queries");
-const {
-  borrowedBookSchema,
-  userPatchSchema,
-  getborrowedBookSchema,
-} = require("./validationSchemas"); // Update the import
+const { borrowedBookSchema, userPatchSchema } = require("./validationSchemas");
+const { Op } = require("sequelize");
+const { sequelize } = require("../../db");
 const {
   isCopyBookExistAndAvaliable,
   validateRequest,
   CheckIfCanReturnBook,
-} = require("./utils"); // Update the import
+} = require("./utils");
 
-// Add a new user
+const { BorrowedBooks } = require("./models");
+const { BookCopies } = require("../books/models");
+
 const borrowBook = async (req, res) => {
-  const { isError, message } = await validateRequest(
-    borrowedBookSchema, // Update the schema
-    null,
-    req,
-    res
-  );
+  const { isError, message } = await validateRequest(borrowedBookSchema, req);
 
   if (isError) return res.status(400).json(message);
 
   const { copy_id, user_id } = req.body;
-
-  const { isErrorOccur, messageError } = await isCopyBookExistAndAvaliable(
-    copy_id
-  );
-
-  if (isErrorOccur) return res.status(400).json(messageError);
 
   let due_date = new Date();
   due_date.setDate(due_date.getDate() + 7);
 
-  // Start a new transaction
-  db.tx(async (t) => {
-    bookCopy = await t.oneOrNone(bookQueries.UpdateBookCopyStatus, [
-      copy_id,
-      "not available",
-    ]);
-    user = await t.oneOrNone(borrowedBooksQueries.borrowBook, [
-      user_id,
-      copy_id,
-      due_date,
-    ]);
+  const { isErrorOccur, messageError, bookCopy } =
+    await isCopyBookExistAndAvaliable(copy_id);
+  if (isErrorOccur) return res.status(400).json(messageError);
 
-    return { User: user, BookCopy: bookCopy };
-  })
+  sequelize
+    .transaction(async (t) => {
+      await bookCopy.update({ Status: "not available" }, { transaction: t });
+
+      const borrowedBook = await BorrowedBooks.create(
+        {
+          Copy_ID: copy_id,
+          User_ID: user_id,
+          Due_Date: due_date,
+        },
+        { transaction: t }
+      );
+
+      return { Book: borrowedBook, BookCopy: bookCopy };
+    })
     .then((data) => {
       res.status(200).json(data);
     })
     .catch((error) => {
       console.log(error);
-      res.status(500).json({ error: "the borrow book opertaion failed" });
+      res.status(500).json({ error: "The borrow book operation failed" });
     });
 };
 
 const returnBook = async (req, res) => {
-  const { isError, message } = await validateRequest(
-    borrowedBookSchema, // Update the schema
-    null,
-    req,
-    res
-  );
+  const { isError, message } = await validateRequest(borrowedBookSchema, req);
 
   if (isError) return res.status(400).json(message);
 
   const { copy_id, user_id } = req.body;
 
-  const { isErrorOccur, messageError } = await CheckIfCanReturnBook(copy_id);
+  const { isErrorOccur, messageError, borrowedBook } =
+    await CheckIfCanReturnBook(copy_id, user_id);
   if (isErrorOccur) return res.status(400).json(messageError);
+
+  const bookCopy = await BookCopies.findByPk(copy_id);
+
+  if (!bookCopy) {
+    res.status(400).json("Book Copy not found with the specified ID.");
+  }
 
   const return_date = new Date();
 
-  db.tx(async (t) => {
-    bookCopy = await t.oneOrNone(bookQueries.UpdateBookCopyStatus, [
-      copy_id,
-      "available",
-    ]);
-    const user = await db.oneOrNone(
-      borrowedBooksQueries.UpdateBorrowedBookReturnDate,
-      [
-        // Update the query
-        return_date,
-        user_id,
-        copy_id,
-      ]
-    );
+  sequelize
+    .transaction(async (t) => {
+      await bookCopy.update({ Status: "available" }, { transaction: t });
 
-    return { User: user, BookCopy: bookCopy };
-  })
+      await borrowedBook.update(
+        { Return_Date: return_date, User_ID: user_id, Copy_ID: copy_id },
+        { transaction: t }
+      );
+
+      return { RetunedBook: borrowedBook, BookCopy: bookCopy };
+    })
     .then((data) => {
       res.status(200).json(data);
     })
     .catch((error) => {
-      console.log(error);
       res.status(500).json({ error: "the return book opertaion failed" });
     });
 };
 
-const borrowedBooks = async (req, res) => {
-  const { isError, message } = await validateRequest(
-    getborrowedBookSchema, // Update the schema
-    null,
-    req,
-    res
-  );
+const userBorrowedBooks = async (req, res) => {
+  const { isError, message } = await validateRequest(borrowedBookSchema, req);
+  if (isError) return res.status(400).json(message);
+
   const { user_id } = req.body;
 
-  if (isError) return res.status(400).json(message);
-  const books = await db.any(borrowedBooksQueries.getBorrowedBooks, [user_id]); // Update the query
+  const books = await BorrowedBooks.findAll({
+    where: {
+      User_ID: user_id,
+      Return_Date: null,
+    },
+  });
+  res.status(200).json(books);
+};
+const borrowedBooks = async (req, res) => {
+  const books = await BorrowedBooks.findAll();
   res.status(200).json(books);
 };
 
+const overDueBorrowedBooks = async (req, res) => {
+  const currentDate = new Date();
+  const overDueBorrowedBooks = await BorrowedBooks.findAll({
+    where: {
+      [Op.or]: [
+        {
+          [Op.and]: [
+            { Due_Date: { [Op.lt]: currentDate } },
+            { Return_Date: { [Op.eq]: null } },
+          ],
+        },
+        {
+          [Op.and]: [
+            { Return_Date: { [Op.ne]: null } },
+            { Due_Date: { [Op.lt]: sequelize.col("Return_Date") } }, // Use Op.ne for "not equal to"
+          ],
+        },
+      ],
+    },
+  });
+  res.status(200).json(overDueBorrowedBooks);
+};
+
 // Update an existing user
-const putUser = async (req, res) => {
-  const userId = parseInt(req.params.id);
+const putBorrowedBooks = async (req, res) => {
+  const bookId = parseInt(req.params.id);
+  const { return_date, due_date } = req.body;
 
-  const { isError, message } = await validateRequest(
-    userSchema, // Update the schema
-    userId,
-    req,
-    res
-  );
-  if (isError) return res.status(400).json(message);
-  const { first_name, last_name, email } = req.body;
-
-  const user = await db.oneOrNone(userQueries.putUser, [
-    // Update the query
-    first_name,
-    last_name,
-    email,
-    userId,
-  ]);
-  res.status(200).json(user);
+  const book = await BorrowedBooks.findByPk(bookId);
+  if (book) await book.update({ Return_Date: return_date, Due_Date: due_date });
+  res.status(200).json(book);
 };
 
 // Partially update an existing user
@@ -182,5 +183,8 @@ const getUserById = async (req, res) => {
 module.exports = {
   borrowBook,
   returnBook,
+  userBorrowedBooks,
+  putBorrowedBooks,
+  overDueBorrowedBooks,
   borrowedBooks,
 };

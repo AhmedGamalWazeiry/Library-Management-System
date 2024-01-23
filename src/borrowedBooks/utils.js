@@ -1,36 +1,57 @@
-const db = require("../../db");
 const borrowedBookQueries = require("./queries"); // Update the import to your borrowed book queries
-
 const bookQueries = require("../books/queries");
+const { BookCopies } = require("../books/models");
+const { BorrowedBooks } = require("./models");
 
 const isCopyBookExistAndAvaliable = async (copy_Id) => {
-  const currentCopyBook = await db.oneOrNone(bookQueries.getCopy, [copy_Id]);
+  const currentCopyBook = await BookCopies.findByPk(copy_Id);
+  let isErrorOccur = false;
+  let messageError = "";
 
-  if (!currentCopyBook || currentCopyBook.status === "not available") {
-    return {
-      isErrorOccur: true,
-      messageError:
-        "Book Copy not found with the specified ID or this copy is not avaliable.",
-    };
+  if (!currentCopyBook) {
+    isErrorOccur = true;
+    messageError = "Book Copy not found with the specified ID.";
+  } else if (currentCopyBook.Status === "not available") {
+    isErrorOccur = true;
+    messageError = "this copy is not avaliable.";
   }
 
-  return { isErrorOccur: false, messageError: "none" };
+  if (isErrorOccur) {
+    return {
+      isErrorOccur: isErrorOccur,
+      messageError: messageError,
+      bookCopy: currentCopyBook,
+    };
+  }
+  return {
+    isErrorOccur: false,
+    messageError: "none",
+    bookCopy: currentCopyBook,
+  };
 };
 // Check if a borrowed book exists by ID
 const CheckIfCanReturnBook = async (copy_id, user_id) => {
   // Update the function name
-  const currentBorrowedBook = await db.oneOrNone(
-    borrowedBookQueries.CheckIfCanReturnBook, // Update the query
-    [copy_id, user_id]
-  );
+  const currentBorrowedBook = await BorrowedBooks.findOne({
+    where: {
+      Copy_ID: copy_id,
+      User_ID: user_id,
+      Return_Date: null,
+    },
+  });
   if (!currentBorrowedBook) {
     return {
       isErrorOccur: true,
       messageError:
         "Borrowed book not found with the specified data or you dont have this book to return it.", // Update the message
+      borrowedBook: currentBorrowedBook,
     };
   }
-  return { isErrorOccur: false, messageError: "none" };
+  return {
+    isErrorOccur: false,
+    messageError: "none",
+    borrowedBook: currentBorrowedBook,
+  };
 };
 
 // const isQuantityAvailableForBook = async (bookId) => {
@@ -49,7 +70,7 @@ const CheckIfCanReturnBook = async (copy_id, user_id) => {
 // };
 
 // Validate request data based on the schema
-const validateRequest = async (schema, borrowedBookId, req, res) => {
+const validateRequest = async (schema, req) => {
   if (Object.keys(req.body).length === 0) {
     return {
       isError: true,
