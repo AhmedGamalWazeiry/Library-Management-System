@@ -5,10 +5,13 @@ const {
   isCopyBookExistAndAvaliable,
   validateRequest,
   CheckIfCanReturnBook,
+  cleanAndExportBorrowingProcess,
 } = require("./utils");
 
 const { BorrowedBooks } = require("./models");
-const { BookCopies } = require("../books/models");
+const { BookCopies, Books } = require("../books/models");
+const { Users } = require("../users/models");
+const { Authors } = require("../authors/models");
 
 const borrowBook = async (req, res) => {
   const { isError, message } = await validateRequest(borrowedBookSchema, req);
@@ -131,55 +134,201 @@ const overDueBorrowedBooks = async (req, res) => {
 // Update an existing user
 const putBorrowedBooks = async (req, res) => {
   const bookId = parseInt(req.params.id);
-  const { return_date, due_date } = req.body;
+  const { return_date, due_date, checkout_date } = req.body;
 
   const book = await BorrowedBooks.findByPk(bookId);
-  if (book) await book.update({ Return_Date: return_date, Due_Date: due_date });
+  if (book)
+    await book.update({
+      Return_Date: return_date,
+      Due_Date: due_date,
+      Checkout_Date: checkout_date,
+    });
+
+  console.log(book);
   res.status(200).json(book);
 };
 
-// Partially update an existing user
-const patchUser = async (req, res) => {
-  const userId = parseInt(req.params.id);
+const libraryBorrowingInsights = async (req, res) => {
+  filePath = "public/insights.csv";
 
-  const { isError, message } = await validateRequest(
-    userPatchSchema, // Update the schema
-    userId,
-    req,
-    res
+  const { start_date, end_date } = req.query;
+
+  const borrowedBooks = await BorrowedBooks.findAll({
+    where: {
+      [Op.or]: [
+        {
+          Checkout_Date: {
+            [Op.between]: [start_date, end_date],
+          },
+        },
+        {
+          Return_Date: {
+            [Op.between]: [start_date, end_date],
+          },
+        },
+      ],
+    },
+    include: [
+      {
+        model: BookCopies,
+        attributes: ["Status"],
+        include: [
+          {
+            model: Books,
+            attributes: ["Book_ID", "Title", "ISBN", "Shelf_Location"],
+            include: [
+              {
+                model: Authors,
+                attributes: [
+                  ["First_Name", "Author_First_Name"],
+                  ["Last_Name", "Author_Last_Name"],
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: Users,
+        attributes: [
+          ["First_Name", "User_First_Name"],
+          ["Last_Name", "User_Last_Name"],
+        ],
+      },
+    ],
+  });
+
+  const link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+
+  res.status(200).json(borrowedBooks);
+};
+
+const exportOverDueBorrowedBooksLastMonth = async (req, res) => {
+  filePath = "public/over-due-books.csv";
+
+  const date = new Date();
+  const firstDayOfLastMonth = new Date(
+    date.getFullYear(),
+    date.getMonth() - 1,
+    1
   );
-  if (isError) return res.status(400).json(message);
-  const keys = Object.keys(req.body);
-  const values = Object.values(req.body);
-  const setString = keys.map((key, i) => `${key} = $${i + 2}`).join(", ");
+  const firstDayOfThisMonth = new Date(date.getFullYear(), date.getMonth(), 1);
 
-  const user = await db.oneOrNone(
-    userQueries.patchUser.replace(/SET/, "SET " + setString), // Update the query
-    [userId, ...values]
+  const borrowedBooks = await BorrowedBooks.findAll({
+    where: {
+      [Op.and]: [
+        {
+          Due_Date: {
+            [Op.between]: [firstDayOfLastMonth, firstDayOfThisMonth],
+          },
+        },
+        {
+          [Op.or]: [
+            {
+              Return_Date: { [Op.eq]: null },
+            },
+            {
+              Due_Date: { [Op.lt]: sequelize.col("Return_Date") },
+            },
+          ],
+        },
+      ],
+    },
+    include: [
+      {
+        model: BookCopies,
+        attributes: ["Status"],
+        include: [
+          {
+            model: Books,
+            attributes: ["Book_ID", "Title", "ISBN", "Shelf_Location"],
+            include: [
+              {
+                model: Authors,
+                attributes: [
+                  ["First_Name", "Author_First_Name"],
+                  ["Last_Name", "Author_Last_Name"],
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: Users,
+        attributes: [
+          ["First_Name", "User_First_Name"],
+          ["Last_Name", "User_Last_Name"],
+        ],
+      },
+    ],
+  });
+
+  const link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+
+  res.status(200).json(borrowedBooks);
+};
+
+const exportBorrowBooksProccessLastMonth = async (req, res) => {
+  filePath = "public/borrow-books-proceses-last-month.csv";
+
+  const date = new Date();
+  const firstDayOfLastMonth = new Date(
+    date.getFullYear(),
+    date.getMonth() - 1,
+    1
   );
-  res.status(200).json(user);
+  const firstDayOfThisMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+
+  const borrowedBooks = await BorrowedBooks.findAll({
+    where: {
+      [Op.or]: [
+        {
+          Checkout_Date: {
+            [Op.between]: [firstDayOfLastMonth, firstDayOfThisMonth],
+          },
+        },
+        {
+          Return_Date: {
+            [Op.between]: [firstDayOfLastMonth, firstDayOfThisMonth],
+          },
+        },
+      ],
+    },
+    include: [
+      {
+        model: BookCopies,
+        attributes: ["Status"],
+        include: [
+          {
+            model: Books,
+            attributes: ["Book_ID", "Title", "ISBN", "Shelf_Location"],
+            include: [
+              {
+                model: Authors,
+                attributes: [
+                  ["First_Name", "Author_First_Name"],
+                  ["Last_Name", "Author_Last_Name"],
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: Users,
+        attributes: [
+          ["First_Name", "User_First_Name"],
+          ["Last_Name", "User_Last_Name"],
+        ],
+      },
+    ],
+  });
+
+  const link = await cleanAndExportBorrowingProcess(borrowedBooks, filePath);
+
+  res.status(200).json(borrowedBooks);
 };
-
-// Get all users
-const getUsers = async (req, res) => {
-  const users = await db.any(userQueries.getUsers); // Update the query
-  res.status(200).json(users);
-};
-
-// Get a user by ID
-const getUserById = async (req, res) => {
-  const userId = parseInt(req.params.id);
-
-  const { isError, message } = await isUserExist(userId); // Update the function
-  if (isError) return res.status(400).json(message);
-
-  const user = await db.oneOrNone(userQueries.getUserById, [
-    // Update the query
-    userId,
-  ]);
-  res.status(200).json(user);
-};
-
 module.exports = {
   borrowBook,
   returnBook,
@@ -187,4 +336,7 @@ module.exports = {
   putBorrowedBooks,
   overDueBorrowedBooks,
   borrowedBooks,
+  libraryBorrowingInsights,
+  exportOverDueBorrowedBooksLastMonth,
+  exportBorrowBooksProccessLastMonth,
 };

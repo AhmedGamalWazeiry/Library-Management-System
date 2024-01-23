@@ -8,8 +8,20 @@ const borrowedBooksRoutes = require("./src/borrowedBooks/routes");
 const authorsRoutes = require("./src/authors/routes");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger_output.json");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
+
+const apiLimiter = rateLimit({
+  windowMs: 30 * 1000, // 0.5 m
+  max: 1,
+});
+
+app.use("/api/v1/borrowed-books/export-over-due-books-last-month", apiLimiter);
+app.use(
+  "/api/v1/borrowed-books/export-borrow-books-proccess-last-month",
+  apiLimiter
+);
 
 app.use(express.json());
 

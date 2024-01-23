@@ -1,0 +1,2 @@
+BorrowedBook_ID,Copy_ID,User_ID,Checkout_Date,Due_Date,Return_Date,createdAt,updatedAt,Status,Book_ID,Title,ISBN,Shelf_Location,Author_First_Name,Author_Last_Name,User_First_Name,User_Last_Name
+3,3,1,2023-12-23T07:53:21.841Z,2023-12-19T07:54:42.017Z,,2024-01-23T08:00:13.623Z,2024-01-23T14:04:12.195Z,not available,1,oop,123456785116s,ffff,ahmedgassmal,Waziry,ahmedgamal,Waziry

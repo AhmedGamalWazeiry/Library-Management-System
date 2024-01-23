@@ -76,7 +76,8 @@ BookCopies.init(
     modelName: "BookCopies",
   }
 );
-Books.belongsTo(Authors, { foreignKey: "Author_ID", as: "Author" });
+Books.belongsTo(Authors, { foreignKey: "Author_ID" });
+BookCopies.belongsTo(Books, { foreignKey: "Book_ID" });
 
 // Sync all defined models to the DB
 sequelize.sync();
