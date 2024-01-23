@@ -5,12 +5,15 @@ const { Users } = require("../users/models");
 const { BorrowedBooks } = require("./models");
 
 const getAndValidateIdParams = (req, res) => {
-  const authorId = parseInt(req.params.id);
-  if (isNaN(authorId) || !Number.isInteger(authorId))
+  let error = false;
+  const bookId = parseInt(req.params.id);
+  if (isNaN(authorId) || !Number.isInteger(bookId)) {
+    error = true;
     res
       .status(400)
       .json({ error: "Invalid author ID. Please provide a valid integer." });
-  return authorId;
+  }
+  return { bookId, error };
 };
 
 function asyncStringify(obj) {
@@ -108,20 +111,24 @@ const isCopyBookExistAndAvaliable = async (copy_Id, res) => {
     res.status(400).json(messageError);
   }
 
-  return currentCopyBook;
+  return { currentCopyBook, isErrorOccur };
 };
 
 const isUserExist = async (user_id, res) => {
+  let isError = false;
   const currentCopyBook = await Users.findByPk(user_id);
 
-  if (!currentCopyBook)
+  if (!currentCopyBook) {
+    isError = false;
     res.status(400).json("The user not found with the specified ID.");
+  }
 
-  return;
+  return isError;
 };
 // Check if a borrowed book exists by ID
 const CheckIfCanReturnBook = async (copy_id, user_id, res) => {
-  const currentBorrowedBook = await BorrowedBooks.findOne({
+  let checkIsError = false;
+  const borrowedBook = await BorrowedBooks.findOne({
     where: {
       Copy_ID: copy_id,
       User_ID: user_id,
@@ -129,27 +136,35 @@ const CheckIfCanReturnBook = async (copy_id, user_id, res) => {
     },
   });
 
-  if (!currentBorrowedBook)
+  if (!borrowedBook) {
+    checkIsError = true;
     res
       .status(400)
       .json(
         "Borrowed book not found with the specified data or you dont have this book to return it."
       );
+  }
 
-  return currentBorrowedBook;
+  return { borrowedBook, checkIsError };
 };
 
 const validateRequest = async (schema, req, res) => {
-  if (Object.keys(req.body).length === 0)
+  let isError = false;
+  if (Object.keys(req.body).length === 0) {
+    isError = true;
     res.status(400).json("You haven't entered any keys.");
+  }
 
   if (req.body) {
     const { error } = await schema.validate(req.body);
 
-    if (error) res.status(400).json(error.details[0].message);
+    if (error) {
+      isError = true;
+      res.status(400).json(error.details[0].message);
+    }
   }
 
-  return;
+  return isError;
 };
 
 module.exports = {

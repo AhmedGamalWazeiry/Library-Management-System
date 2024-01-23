@@ -2,29 +2,40 @@ const { Books } = require("./models");
 const { Authors } = require("../authors/models");
 
 const getAndValidateIdParams = (req, res) => {
-  const authorId = parseInt(req.params.id);
-  if (isNaN(authorId) || !Number.isInteger(authorId))
+  let error = false;
+  const bookId = parseInt(req.params.id);
+  if (isNaN(bookId) || !Number.isInteger(bookId)) {
+    error = true;
     res
       .status(400)
       .json({ error: "Invalid author ID. Please provide a valid integer." });
-  return authorId;
+  }
+  return { bookId, error };
 };
 
 // Validate request data based on the schema
 const validateRequest = async (schema, bookId, req, res) => {
-  if (Object.keys(req.body).length === 0)
+  let isError = false;
+  if (Object.keys(req.body).length === 0) {
+    isError = true;
     res.status(400).json("You haven't entered any keys.");
+  }
 
   if (bookId) {
     const currentBook = await Books.findByPk(bookId);
 
-    if (!currentBook)
+    if (!currentBook) {
+      isError = true;
       res.status(400).json("Book not found with the specified ID.");
+    }
   }
 
   if (req.body) {
     const { error } = await schema.validate(req.body);
-    if (error) res.status(400).json(error.details[0].message);
+    if (error) {
+      isError = true;
+      res.status(400).json(error.details[0].message);
+    }
 
     const { isbn, author_id } = req.body;
     if (isbn) {
@@ -34,17 +45,21 @@ const validateRequest = async (schema, bookId, req, res) => {
         },
       });
 
-      if (book && book.Book_ID !== bookId)
+      if (book && book.Book_ID !== bookId) {
+        isError = true;
         res.status(400).json("This ISBN already exists!");
+      }
     }
 
     if (author_id) {
       const author = await Authors.findByPk(author_id);
-      if (!author)
+      if (!author) {
+        isError = true;
         res.status(400).json("The author with this ID does not exist.");
+      }
     }
   }
-  return;
+  return isError;
 };
 
 module.exports = {

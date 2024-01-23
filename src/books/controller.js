@@ -11,7 +11,8 @@ const {
 
 // Add a new book
 const addBook = async (req, res) => {
-  await validateRequest(bookSchema, null, req, res);
+  const isError = await validateRequest(bookSchema, null, req, res);
+  if (isError) return;
 
   const { title, isbn, shelf_location, author_id } = req.body;
 
@@ -26,9 +27,11 @@ const addBook = async (req, res) => {
 
 // Update an existing book
 const putBook = async (req, res) => {
-  const bookId = getAndValidateIdParams(req, res);
+  const { bookId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  await validateRequest(bookSchema, bookId, req, res);
+  const isError = await validateRequest(bookSchema, null, req, res);
+  if (isError) return;
 
   const { title, isbn, shelf_location, author_id } = req.body;
 
@@ -45,9 +48,11 @@ const putBook = async (req, res) => {
 
 // Partially update an existing book
 const patchBook = async (req, res) => {
-  const bookId = getAndValidateIdParams(req, res);
+  const { bookId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  await validateRequest(bookPatchSchema, bookId, req, res);
+  const isError = await validateRequest(bookPatchSchema, null, req, res);
+  if (isError) return;
 
   const { title, isbn, shelf_location, author_id } = req.body;
 
@@ -86,7 +91,8 @@ const getBooksCopies = async (req, res) => {
 
 // Get a book by ID
 const getBookById = async (req, res) => {
-  const bookId = getAndValidateIdParams(req, res);
+  const { bookId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
   const book = await Books.findByPk(bookId);
 
@@ -97,7 +103,8 @@ const getBookById = async (req, res) => {
 
 // Delete a book by ID
 const deleteBook = async (req, res) => {
-  const bookId = getAndValidateIdParams(req, res);
+  const { bookId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
   const book = await Books.findByPk(bookId);
 
@@ -111,7 +118,8 @@ const deleteBook = async (req, res) => {
 
 // Delete a book Copy by ID
 const addBookCopy = async (req, res) => {
-  await validateRequest(bookCopySchema, null, req, res);
+  const isError = await validateRequest(bookCopySchema, null, req, res);
+  if (isError) return;
 
   const { book_id } = req.body;
 
@@ -129,9 +137,10 @@ const addBookCopy = async (req, res) => {
 };
 
 const deleteBookCopy = async (req, res) => {
-  const bookCopyId = getAndValidateIdParams(req, res);
+  const { bookId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  const bookCopy = await BookCopies.findByPk(bookCopyId);
+  const bookCopy = await BookCopies.findByPk(bookId);
 
   if (bookCopy) {
     await bookCopy.destroy();

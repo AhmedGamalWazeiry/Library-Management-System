@@ -18,19 +18,29 @@ const { Users } = require("../users/models");
 const { Authors } = require("../authors/models");
 
 const borrowBook = async (req, res) => {
-  await validateRequest(borrowedBookSchema, req, res);
+  const isError = await validateRequest(borrowedBookSchema, req, res);
+  if (isError) return;
 
   const { copy_id, user_id } = req.body;
 
   let due_date = new Date();
   due_date.setDate(due_date.getDate() + 7); // let's make the due date 7 days from checkout
 
-  const bookCopy = await isCopyBookExistAndAvaliable(copy_id, res);
-  await isUserExist(user_id, res);
+  let { currentCopyBook, isErrorOccur } = await isCopyBookExistAndAvaliable(
+    copy_id,
+    res
+  );
+  if (isErrorOccur) return;
+
+  let checkError = await isUserExist(user_id, res);
+  if (checkError) return;
 
   sequelize
     .transaction(async (t) => {
-      await bookCopy.update({ Status: "not available" }, { transaction: t });
+      await currentCopyBook.update(
+        { Status: "not available" },
+        { transaction: t }
+      );
 
       const borrowedBook = await BorrowedBooks.create(
         {
@@ -41,7 +51,7 @@ const borrowBook = async (req, res) => {
         { transaction: t }
       );
 
-      return { Book: borrowedBook, BookCopy: bookCopy };
+      return { Book: borrowedBook, BookCopy: currentCopyBook };
     })
     .then((data) => {
       res.status(200).json(data);
@@ -52,17 +62,23 @@ const borrowBook = async (req, res) => {
 };
 
 const returnBook = async (req, res) => {
-  await validateRequest(borrowedBookSchema, req, res);
+  const isError = await validateRequest(borrowedBookSchema, req, res);
+  if (isError) return;
 
   const { copy_id, user_id } = req.body;
 
-  await isUserExist(user_id, res);
+  let checkError = await isUserExist(user_id, res);
+  if (checkError) return;
 
   const bookCopy = await BookCopies.findByPk(copy_id);
   if (!bookCopy)
     res.status(400).json("Book Copy not found with the specified ID.");
 
-  const borrowedBook = await CheckIfCanReturnBook(copy_id, user_id);
+  const { borrowedBook, checkIsError } = await CheckIfCanReturnBook(
+    copy_id,
+    user_id
+  );
+  if (checkIsError) return;
   const return_date = new Date();
 
   sequelize
@@ -85,11 +101,13 @@ const returnBook = async (req, res) => {
 };
 
 const userBorrowedBooks = async (req, res) => {
-  await validateRequest(borrowedBookSchema, req, res);
+  const isError = await validateRequest(borrowedBookSchema, req, res);
+  if (isError) return;
 
   const { user_id } = req.body;
 
-  await isUserExist(user_id, res);
+  let checkError = await isUserExist(user_id, res);
+  if (checkError) return;
 
   const books = await BorrowedBooks.findAll({
     where: {
@@ -131,7 +149,8 @@ const overDueBorrowedBooks = async (req, res) => {
 
 //I use this endpoint only for test the search endpoints like the below endpoints
 const putBorrowedBooks = async (req, res) => {
-  const bookId = getAndValidateIdParams(req, res);
+  const { bookId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
   const { return_date, due_date, checkout_date } = req.body;
 

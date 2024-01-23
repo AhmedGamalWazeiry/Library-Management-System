@@ -4,7 +4,8 @@ const { Authors } = require("./models");
 
 // Add a new author
 const addAuthor = async (req, res) => {
-  await validateRequest(authorSchema, null, req, res);
+  const isError = await validateRequest(authorSchema, null, req, res);
+  if (isError) return;
 
   const { first_name, last_name } = req.body;
 
@@ -18,9 +19,11 @@ const addAuthor = async (req, res) => {
 
 // Update an existing author
 const putAuthor = async (req, res) => {
-  const authorId = getAndValidateIdParams(req, res);
+  const { authorId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  await validateRequest(authorSchema, authorId, req, res);
+  const isError = await validateRequest(authorSchema, null, req, res);
+  if (isError) return;
 
   const { first_name, last_name } = req.body;
 
@@ -34,9 +37,11 @@ const putAuthor = async (req, res) => {
 };
 
 const patchAuthor = async (req, res) => {
-  const authorId = getAndValidateIdParams(req, res);
+  const { authorId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  await validateRequest(authorPatchSchema, authorId, req, res);
+  const isError = await validateRequest(authorSchema, null, req, res);
+  if (isError) return;
 
   const { first_name, last_name } = req.body;
 
@@ -58,7 +63,8 @@ const getAuthors = async (req, res) => {
 
 // Get an author by ID
 const getAuthorById = async (req, res) => {
-  const authorId = getAndValidateIdParams(req, res);
+  const { authorId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
   const author = await Authors.findByPk(authorId);
 
@@ -69,7 +75,8 @@ const getAuthorById = async (req, res) => {
 
 // Delete an author by ID
 const deleteAuthor = async (req, res) => {
-  const authorId = getAndValidateIdParams(req, res);
+  const { authorId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
   const author = await Authors.findByPk(authorId);
   if (author) {

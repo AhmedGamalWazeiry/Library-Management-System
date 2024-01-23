@@ -4,7 +4,8 @@ const { Users } = require("./models");
 
 // Add a new user
 const addUser = async (req, res) => {
-  await validateRequest(userSchema, null, req, res);
+  const isError = await validateRequest(userSchema, null, req, res);
+  if (isError) return;
 
   const { first_name, last_name, email } = req.body;
 
@@ -19,9 +20,11 @@ const addUser = async (req, res) => {
 
 // Update an existing user
 const putUser = async (req, res) => {
-  const userId = getAndValidateIdParams(req, res);
+  const { userId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  await validateRequest(userSchema, userId, req, res);
+  const isError = await validateRequest(userSchema, null, req, res);
+  if (isError) return;
 
   const { first_name, last_name, email } = req.body;
 
@@ -37,9 +40,11 @@ const putUser = async (req, res) => {
 
 // Partially update an existing user
 const patchUser = async (req, res) => {
-  const userId = parseInt(req.params.id);
+  const { userId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
-  await validateRequest(userPatchSchema, userId, req, res);
+  const isError = await validateRequest(userPatchSchema, null, req, res);
+  if (isError) return;
 
   const { first_name, last_name, email } = req.body;
 
@@ -73,7 +78,8 @@ const getUserById = async (req, res) => {
 
 // Delete a user by ID
 const deleteUser = async (req, res) => {
-  const userId = parseInt(req.params.id);
+  const { userId, error } = getAndValidateIdParams(req, res);
+  if (error) return;
 
   const user = await Users.findByPk(userId);
   if (user) {
