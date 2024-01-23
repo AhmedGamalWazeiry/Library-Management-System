@@ -76,7 +76,8 @@ const returnBook = async (req, res) => {
 
   const { borrowedBook, checkIsError } = await CheckIfCanReturnBook(
     copy_id,
-    user_id
+    user_id,
+    res
   );
   if (checkIsError) return;
   const return_date = new Date();
