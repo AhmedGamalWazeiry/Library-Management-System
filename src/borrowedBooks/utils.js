@@ -7,7 +7,7 @@ const { BorrowedBooks } = require("./models");
 const getAndValidateIdParams = (req, res) => {
   let error = false;
   const bookId = parseInt(req.params.id);
-  if (isNaN(authorId) || !Number.isInteger(bookId)) {
+  if (isNaN(bookId) || !Number.isInteger(bookId)) {
     error = true;
     res
       .status(400)
